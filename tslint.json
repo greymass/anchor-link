@@ -1,0 +1,14 @@
+{
+  "extends": [
+    "tslint-plugin-prettier",
+    "tslint-config-prettier"
+  ],
+  "rules": {
+    "prettier": true,
+    "triple-equals": [
+      true,
+      "allow-null-check"
+    ],
+    "ordered-imports": true
+  }
+}
