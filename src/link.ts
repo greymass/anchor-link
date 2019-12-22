@@ -113,72 +113,50 @@ export class Link implements esr.AbiProvider {
 
     public async sendRequest(request: esr.SigningRequest, transport?: LinkTransport) {
         const t = transport || this.transport
-        const linkUrl = request.data.callback
-        if (!linkUrl.startsWith(this.serviceAddress)) {
-            throw new Error('Request must have a link callback')
-        }
-        // wait for callback or user cancel
-        const ctx: {cancel?: () => void} = {}
-        const socket = waitForCallback(linkUrl, ctx)
-        const cancel = new Promise<never>((resolve, reject) => {
-            t.onRequest(request, (reason) => {
-                if (ctx.cancel) {
-                    ctx.cancel()
-                }
-                if (typeof reason === 'string') {
-                    reject(new CancelError(reason))
-                } else {
-                    reject(reason)
-                }
-            })
-        })
-        const payload = await Promise.race([socket, cancel])
-
-        const signer: esr.abi.PermissionLevel = {
-            actor: payload.sa,
-            permission: payload.sp,
-        }
-        const signatures: string[] = Object.keys(payload)
-            .filter((key) => key.startsWith('sig') && key !== 'sig0')
-            .map((key) => payload[key]!)
-
-        return {
-            signer,
-            payload,
-            signatures,
-        }
-    }
-
-    public async transact(args: TransactArgs, transport?: LinkTransport): Promise<TransactResult> {
-        const t = transport || this.transport
-        const request = await this.createRequest(args)
         try {
-            const {payload, signatures, signer} = await this.sendRequest(request, t)
+            const linkUrl = request.data.callback
+            if (!linkUrl.startsWith(this.serviceAddress)) {
+                throw new Error('Request must have a link callback')
+            }
+            if (request.data.flags !== 2) {
+                throw new Error('Invalid request flags')
+            }
+            // wait for callback or user cancel
+            const ctx: {cancel?: () => void} = {}
+            const socket = waitForCallback(linkUrl, ctx)
+            const cancel = new Promise<never>((resolve, reject) => {
+                t.onRequest(request, (reason) => {
+                    if (ctx.cancel) {
+                        ctx.cancel()
+                    }
+                    if (typeof reason === 'string') {
+                        reject(new CancelError(reason))
+                    } else {
+                        reject(reason)
+                    }
+                })
+            })
+            const payload = await Promise.race([socket, cancel])
+            const signer: esr.abi.PermissionLevel = {
+                actor: payload.sa,
+                permission: payload.sp,
+            }
+            const signatures: string[] = Object.keys(payload)
+                .filter((key) => key.startsWith('sig') && key !== 'sig0')
+                .map((key) => payload[key]!)
             // recreate transaction from request response
             const resolved = await esr.ResolvedSigningRequest.fromPayload(
                 payload,
                 this.requestOptions
             )
             const {serializedTransaction, transaction} = resolved
-
-            // broadcast transaction if requested
-            const broadcast = args.broadcast || false
-            let processed: {[key: string]: any} | undefined
-            if (broadcast) {
-                const res = await this.rpc.push_transaction({
-                    signatures: [payload.sig],
-                    serializedTransaction,
-                })
-                processed = res.processed
-            }
             const result: TransactResult = {
-                payload,
-                signatures,
-                signer,
                 request,
-                transaction,
                 serializedTransaction,
-                processed,
+                transaction,
+                signatures,
+                payload,
+                signer,
             }
             if (t.onSuccess) {
                 t.onSuccess(request, result)
@@ -190,6 +168,22 @@ export class Link implements esr.AbiProvider {
             }
             throw error
         }
+    }
+
+    public async transact(args: TransactArgs, transport?: LinkTransport): Promise<TransactResult> {
+        const t = transport || this.transport
+        const request = await this.createRequest(args)
+        const result = await this.sendRequest(request, t)
+        // broadcast transaction if requested
+        const broadcast = args.broadcast || false
+        if (broadcast) {
+            const res = await this.rpc.push_transaction({
+                signatures: result.signatures,
+                serializedTransaction: result.serializedTransaction,
+            })
+            result.processed = res.processed
+        }
+        return result
     }
 
     /**
