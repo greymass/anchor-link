@@ -36,5 +36,17 @@
     "tslint-config-prettier": "^1.18.0",
     "tslint-plugin-prettier": "^2.1.0",
     "typescript": "^3.7.4"
-  }
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/greymass/anchor-link.git"
+  },
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/greymass/anchor-link/issues"
+  },
+  "homepage": "https://github.com/greymass/anchor-link#readme"
 }
