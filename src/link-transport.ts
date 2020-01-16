@@ -1,7 +1,7 @@
 import {SigningRequest} from 'eosio-signing-request'
-import qrcode from 'qrcode-terminal'
 
 import {TransactResult} from './link'
+import {LinkSession} from './link-session'
 
 /**
  * Protocol link transports need to implement.
@@ -19,19 +19,18 @@ export interface LinkTransport {
     onSuccess?(request: SigningRequest, result: TransactResult)
     /** Called if the request failed. */
     onFailure?(request: SigningRequest, error: Error)
-}
-
-/**
- * A signing request presenter that writes requests
- * as URI strings and ASCII qr codes to console.log.
- */
-export class ConsoleTransport implements LinkTransport {
-    public onRequest(request: SigningRequest) {
-        const uri = request.encode()
-        console.log(`Signing request\n${uri}`)
-        qrcode.setErrorLevel('L')
-        qrcode.generate(uri, {small: true}, (code) => {
-            console.log(code)
-        })
-    }
+    /**
+     * Called when a session request is initiated.
+     * @param session Session where the request originated.
+     * @param request Signing request that will be sent over the session.
+     * @param timeout Number of milliseconds until session request expires.
+     * @param device Display name of linked device.
+     */
+    onSessionRequest?(
+        session: LinkSession,
+        request: SigningRequest,
+        timeout: number,
+        device: string,
+        cancel: (reason: string | Error) => void
+    )
 }

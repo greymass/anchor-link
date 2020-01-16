@@ -3,8 +3,8 @@
 export type Name = string
 export type Bytes = string | number[] | Uint8Array
 export type PublicKey = string
+export type TimePointSec = string
 export type Uint32 = number
-export type Varuint32 = number
 export type Uint64 = number | string
 
 export interface SealedMessage {
@@ -20,5 +20,5 @@ export interface LinkCreate {
 }
 
 export interface LinkInfo {
-    seq: Varuint32
+    expiration: TimePointSec
 }

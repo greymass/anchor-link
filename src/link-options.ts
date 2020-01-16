@@ -4,6 +4,10 @@ import {LinkTransport} from './link-transport'
 
 export interface LinkOptions {
     /**
+     * Link transport responsible for presenting signing requests to user, required.
+     */
+    transport: LinkTransport
+    /**
      * ChainID or esr chain name alias for which the link is valid.
      * Defaults to EOS (aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906).
      */
@@ -14,14 +18,10 @@ export interface LinkOptions {
      */
     rpc?: string | JsonRpc
     /**
-     * URL to link service.
+     * URL to link callback service.
      * Defaults to https://cb.anchor.link.
      */
     service?: string
-    /**
-     * Link transport, defaults to a console transport if omitted.
-     */
-    transport?: LinkTransport
     /**
      * Text encoder, only needed in old browsers or if used in node.js versions prior to v13.
      */

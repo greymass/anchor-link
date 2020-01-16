@@ -7,10 +7,10 @@ import uuid from 'uuid/v4'
 import WebSocket from 'ws'
 
 import {CancelError, IdentityError} from './errors'
-import {Bytes, LinkCreate} from './link-abi'
+import {LinkCreate} from './link-abi'
 import {defaults, LinkOptions} from './link-options'
-import {LinkSession, LinkSessionData} from './link-session'
-import {ConsoleTransport, LinkTransport} from './link-transport'
+import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
+import {LinkTransport} from './link-transport'
 import {abiEncode} from './utils'
 
 const {fetch} = makeFetch()
@@ -62,7 +62,7 @@ export class Link implements esr.AbiProvider {
     private requestOptions: esr.SigningRequestEncodingOptions
     private abiCache = new Map<string, any>()
 
-    constructor(options: LinkOptions = {}) {
+    constructor(options: LinkOptions) {
         if (options.rpc === undefined || typeof options.rpc === 'string') {
             this.rpc = new JsonRpc(options.rpc || defaults.rpc, {fetch: fetch as any})
         } else {
@@ -70,7 +70,7 @@ export class Link implements esr.AbiProvider {
         }
         this.chainId = options.chainId || defaults.chainId
         this.serviceAddress = (options.service || defaults.service).trim().replace(/\/$/, '')
-        this.transport = options.transport || new ConsoleTransport()
+        this.transport = options.transport
         this.requestOptions = {
             abiProvider: this,
             textDecoder: options.textDecoder || new TextDecoder(),
@@ -256,19 +256,22 @@ export class Link implements esr.AbiProvider {
             link: abiEncode(createInfo, 'link_create'),
         })
         let session: LinkSession
-        if (res.payload.link_ch && res.payload.link_key) {
-            let data: LinkSessionData = {
+        if (res.payload.link_ch && res.payload.link_key && res.payload.link_name) {
+            session = new LinkChannelSession(this, {
                 auth: res.signer,
                 publicKey: res.signerKey,
-                channel: res.payload.link_ch,
-                channelKey: res.payload.link_key,
-                channelSequence: 0,
-                privateKey,
-            }
-            session = new LinkSession(this, data)
+                channel: {
+                    url: res.payload.link_ch,
+                    key: res.payload.link_key,
+                    name: res.payload.link_name,
+                },
+                requestKey: privateKey,
+            })
         } else {
-            /// todo fallback session using current transport
-            throw new Error('User wallet not link compatible')
+            session = new LinkFallbackSession(this, {
+                auth: res.signer,
+                publicKey: res.signerKey,
+            })
         }
         return {
             ...res,
