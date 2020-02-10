@@ -28,7 +28,7 @@
     "ws-browser.js"
   ],
   "dependencies": {
-    "eosio-signing-request": "1.0.1",
+    "eosio-signing-request": "^1.0.2",
     "eosjs": "^20.0.0",
     "eosjs-ecc": "^4.0.7",
     "fetch-ponyfill": "^6.1.0",
@@ -45,7 +45,7 @@
     "eosio-abi2ts": "^1.2.2",
     "prettier": "^1.19.1",
     "ts-node": "^8.5.3",
-    "tslint": "^5.20.1",
+    "tslint": "^6.0.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-plugin-prettier": "^2.1.0",
     "typescript": "^3.7.4"
