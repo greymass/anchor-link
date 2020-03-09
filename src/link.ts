@@ -3,7 +3,7 @@ import {ApiInterfaces, JsonRpc} from 'eosjs'
 import * as ecc from 'eosjs-ecc'
 import makeFetch from 'fetch-ponyfill'
 import * as zlib from 'pako'
-import uuid from 'uuid/v4'
+import {v4 as uuid} from 'uuid'
 import WebSocket from 'ws'
 
 import {CancelError, IdentityError} from './errors'
@@ -151,7 +151,7 @@ export class Link implements esr.AbiProvider {
             )
             const {serializedTransaction, transaction} = resolved
             const result: TransactResult = {
-                request,
+                request: resolved.request,
                 serializedTransaction,
                 transaction,
                 signatures,
@@ -196,17 +196,16 @@ export class Link implements esr.AbiProvider {
         info?: {[key: string]: string | Uint8Array}
     ) {
         const request = await this.createRequest({
-            identity: {permission: requestPermission},
+            identity: {permission: requestPermission || null},
             info,
         })
         const res = await this.sendRequest(request)
-        const {serializedTransaction} = await esr.ResolvedSigningRequest.fromPayload(
-            res.payload,
-            this.requestOptions
-        )
+        if (!res.request.isIdentity()) {
+            throw new IdentityError(`Unexpected response`)
+        }
         const message = Buffer.concat([
             Buffer.from(request.getChainId(), 'hex'),
-            Buffer.from(serializedTransaction),
+            Buffer.from(res.serializedTransaction),
             Buffer.alloc(32),
         ])
         const {signer} = res
@@ -226,14 +225,24 @@ export class Link implements esr.AbiProvider {
         const auth = permission.required_auth
         const keyAuth = auth.keys.find(({key}) => key === signerKey)
         if (!keyAuth) {
-            throw new IdentityError(
-                `${signer.actor}@${signer.permission} has no key matching id signature`
-            )
+            throw new IdentityError(`${formatAuth(signer)} has no key matching id signature`)
         }
         if (auth.threshold > keyAuth.weight) {
-            throw new IdentityError(
-                `${signer.actor}@${signer.permission} signature does not reach auth threshold`
-            )
+            throw new IdentityError(`${formatAuth(signer)} signature does not reach auth threshold`)
+        }
+        if (requestPermission) {
+            if (
+                (requestPermission.actor !== esr.PlaceholderName &&
+                    requestPermission.actor !== signer.actor) ||
+                (requestPermission.permission !== esr.PlaceholderPermission &&
+                    requestPermission.permission !== signer.permission)
+            ) {
+                throw new IdentityError(
+                    `Unexpected identity proof from ${formatAuth(signer)}, expected ${formatAuth(
+                        requestPermission
+                    )} `
+                )
+            }
         }
         return {
             ...res,
@@ -255,23 +264,32 @@ export class Link implements esr.AbiProvider {
         const res = await this.identify(undefined, {
             link: abiEncode(createInfo, 'link_create'),
         })
+        const metadata = {sameDevice: res.request.getRawInfo()['return_path'] !== undefined}
         let session: LinkSession
         if (res.payload.link_ch && res.payload.link_key && res.payload.link_name) {
-            session = new LinkChannelSession(this, {
-                auth: res.signer,
-                publicKey: res.signerKey,
-                channel: {
-                    url: res.payload.link_ch,
-                    key: res.payload.link_key,
-                    name: res.payload.link_name,
+            session = new LinkChannelSession(
+                this,
+                {
+                    auth: res.signer,
+                    publicKey: res.signerKey,
+                    channel: {
+                        url: res.payload.link_ch,
+                        key: res.payload.link_key,
+                        name: res.payload.link_name,
+                    },
+                    requestKey: privateKey,
                 },
-                requestKey: privateKey,
-            })
+                metadata
+            )
         } else {
-            session = new LinkFallbackSession(this, {
-                auth: res.signer,
-                publicKey: res.signerKey,
-            })
+            session = new LinkFallbackSession(
+                this,
+                {
+                    auth: res.signer,
+                    publicKey: res.signerKey,
+                },
+                metadata
+            )
         }
         return {
             ...res,
@@ -373,4 +391,16 @@ function waitForCallback(url: string, ctx: {cancel?: () => void}) {
  */
 function backoff(tries: number): number {
     return Math.min(Math.pow(tries * 10, 2), 10 * 1000)
+}
+
+/** Format a EOSIO permission level in the format `actor@permission` taking placeholders into consideration. */
+function formatAuth(auth: esr.abi.PermissionLevel): string {
+    let {actor, permission} = auth
+    if (actor === esr.PlaceholderName) {
+        actor = '<any>'
+    }
+    if (permission === esr.PlaceholderName || permission === esr.PlaceholderPermission) {
+        permission = '<any>'
+    }
+    return `${actor}@${permission}`
 }

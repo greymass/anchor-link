@@ -21,6 +21,10 @@ export abstract class LinkSession {
         actor: string
         permission: string
     }
+    /** Session type, e.g. 'channel'.  */
+    abstract type: string
+    /** Arbitrary metadata that will be serialized with the session. */
+    abstract metadata: {[key: string]: any}
     /** Creates a eosjs compatible signature provider that can sign for the session public key. */
     abstract makeSignatureProvider(): ApiInterfaces.SignatureProvider
     /**
@@ -29,18 +33,24 @@ export abstract class LinkSession {
      */
     abstract transact(args: TransactArgs)
     /** Returns a JSON-encodable object that can be passed to the constructor to recreate the session. */
-    abstract serialize(): any
+    abstract serialize(): SerializedLinkSession
     /** Restore a previously serialized session. */
-    static restore(link: Link, data: any): LinkSession {
+    static restore(link: Link, data: SerializedLinkSession): LinkSession {
         switch (data.type) {
             case 'channel':
-                return new LinkChannelSession(link, data)
+                return new LinkChannelSession(link, data.data, data.metadata)
             case 'fallback':
-                return new LinkFallbackSession(link, data)
+                return new LinkFallbackSession(link, data.data, data.metadata)
             default:
                 throw new Error('Unable to restore, session data invalid')
         }
     }
+}
+
+interface SerializedLinkSession {
+    type: string
+    metadata: {[key: string]: any}
+    data: any
 }
 
 interface ChannelInfo {
@@ -75,13 +85,15 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         actor: string
         permission: string
     }
+    readonly type = 'channel'
+    readonly metadata
     readonly publicKey: string
-    serialize: () => LinkChannelSessionData
+    serialize: () => SerializedLinkSession
     private channel: ChannelInfo
     private timeout = 2 * 60 * 1000 // ms
     private encrypt: (request: SigningRequest) => Uint8Array
 
-    constructor(link: Link, data: LinkChannelSessionData) {
+    constructor(link: Link, data: LinkChannelSessionData, metadata: any) {
         super()
         this.link = link
         this.auth = data.auth
@@ -90,7 +102,16 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         this.encrypt = (request) => {
             return sealMessage(request.encode(true, false), data.requestKey, data.channel.key)
         }
-        this.serialize = () => ({type: 'channel', ...data})
+        this.metadata = {
+            ...(metadata || {}),
+            timeout: this.timeout,
+            name: this.channel.name,
+        }
+        this.serialize = () => ({
+            type: 'channel',
+            data,
+            metadata: this.metadata,
+        })
     }
 
     onSuccess(request, result) {
@@ -110,13 +131,7 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
             expiration: new Date(Date.now() + this.timeout).toISOString().slice(0, -1),
         }
         if (this.link.transport.onSessionRequest) {
-            this.link.transport.onSessionRequest(
-                this,
-                request,
-                this.timeout,
-                this.channel.name,
-                cancel
-            )
+            this.link.transport.onSessionRequest(this, request, cancel)
         }
         setTimeout(() => {
             cancel(new SessionError('Wallet did not respond in time', 'E_TIMEOUT'))
@@ -167,28 +182,55 @@ export interface LinkFallbackSessionData {
     publicKey: string
 }
 
-export class LinkFallbackSession extends LinkSession {
+export class LinkFallbackSession extends LinkSession implements LinkTransport {
     readonly link: Link
     readonly auth: {
         actor: string
         permission: string
     }
+    readonly type = 'fallback'
+    readonly metadata: {[key: string]: any}
     readonly publicKey: string
-    serialize: () => LinkFallbackSessionData
+    serialize: () => SerializedLinkSession
 
-    constructor(link: Link, data: LinkFallbackSessionData) {
+    constructor(link: Link, data: LinkFallbackSessionData, metadata: any) {
         super()
         this.link = link
         this.auth = data.auth
         this.publicKey = data.publicKey
-        this.serialize = () => ({type: 'fallback', ...data})
+        this.metadata = metadata || {}
+        this.serialize = () => ({
+            type: this.type,
+            data,
+            metadata: this.metadata,
+        })
+    }
+
+    onSuccess(request, result) {
+        if (this.link.transport.onSuccess) {
+            this.link.transport.onSuccess(request, result)
+        }
+    }
+
+    onFailure(request, error) {
+        if (this.link.transport.onFailure) {
+            this.link.transport.onFailure(request, error)
+        }
+    }
+
+    onRequest(request, cancel) {
+        if (this.link.transport.onSessionRequest) {
+            this.link.transport.onSessionRequest(this, request, cancel)
+        } else {
+            this.link.transport.onRequest(request, cancel)
+        }
+    }
+
+    public makeSignatureProvider(): ApiInterfaces.SignatureProvider {
+        return this.link.makeSignatureProvider([this.publicKey], this)
     }
 
     transact(args: TransactArgs) {
-        return this.link.transact(args)
-    }
-
-    public makeSignatureProvider() {
-        return this.link.makeSignatureProvider([this.publicKey])
+        return this.link.transact(args, this)
     }
 }

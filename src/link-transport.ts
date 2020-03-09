@@ -23,14 +23,10 @@ export interface LinkTransport {
      * Called when a session request is initiated.
      * @param session Session where the request originated.
      * @param request Signing request that will be sent over the session.
-     * @param timeout Number of milliseconds until session request expires.
-     * @param device Display name of linked device.
      */
     onSessionRequest?(
         session: LinkSession,
         request: SigningRequest,
-        timeout: number,
-        device: string,
         cancel: (reason: string | Error) => void
     )
 }

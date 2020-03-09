@@ -28,26 +28,26 @@
     "ws-browser.js"
   ],
   "dependencies": {
-    "eosio-signing-request": "^1.0.2",
+    "eosio-signing-request": "^1.1.1",
     "eosjs": "^20.0.0",
     "eosjs-ecc": "^4.0.7",
     "fetch-ponyfill": "^6.1.0",
     "pako": "^1.0.10",
     "qrcode-terminal": "^0.12.0",
-    "uuid": "^3.3.3",
-    "ws": "^7.2.1"
+    "uuid": "^7.0.2",
+    "ws": "^7.2.2"
   },
   "devDependencies": {
-    "@types/node": "^13.1.7",
+    "@types/node": "^13.9.0",
     "@types/pako": "^1.0.1",
-    "@types/uuid": "^3.4.6",
-    "@types/ws": "^7.2.0",
+    "@types/uuid": "^7.0.0",
+    "@types/ws": "^7.2.2",
     "eosio-abi2ts": "^1.2.2",
     "prettier": "^1.19.1",
     "ts-node": "^8.5.3",
     "tslint": "^6.0.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-plugin-prettier": "^2.1.0",
-    "typescript": "^3.7.4"
+    "typescript": "^3.8.3"
   }
 }
