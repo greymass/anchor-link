@@ -1,5 +1,5 @@
 import * as esr from 'eosio-signing-request'
-import {ApiInterfaces, JsonRpc} from 'eosjs'
+import {ApiInterfaces, JsonRpc, Numeric} from 'eosjs'
 import * as ecc from 'eosjs-ecc'
 import makeFetch from 'fetch-ponyfill'
 import * as zlib from 'pako'
@@ -323,6 +323,22 @@ export class Link implements esr.AbiProvider {
             },
         }
     }
+
+    public makeAuthorityProvider() {
+        const { rpc } = this;
+        return {
+          async getRequiredKeys(args) {
+            const {
+                availableKeys,
+                transaction
+            } = args;
+            return convertLegacyPublicKeys((await rpc.fetch('/v1/chain/get_required_keys', {
+                transaction,
+                available_keys: convertLegacyPublicKeys(availableKeys),
+            })).required_keys);
+          }
+        };
+    }
 }
 
 function waitForCallback(url: string, ctx: {cancel?: () => void}) {
@@ -403,4 +419,21 @@ function formatAuth(auth: esr.abi.PermissionLevel): string {
         permission = '<any>'
     }
     return `${actor}@${permission}`
+}
+
+function convertLegacyPublicKey(s) {
+  let pubkey = s;
+  // Convert Alternative Legacy to EOS for this process
+  if (['FIO'].includes(s.substr(0, 3))) {
+    pubkey = pubkey.replace(/^.{3}/g, 'EOS');
+  }
+  // Convert Legacy Keys
+  if (pubkey.substr(0, 3) === 'EOS') {
+    return Numeric.publicKeyToString(Numeric.stringToPublicKey(pubkey));
+  }
+  return pubkey;
+}
+
+function convertLegacyPublicKeys(keys) {
+  return keys.map(convertLegacyPublicKey);
 }

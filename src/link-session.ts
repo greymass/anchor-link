@@ -25,6 +25,8 @@ export abstract class LinkSession {
     abstract type: string
     /** Arbitrary metadata that will be serialized with the session. */
     abstract metadata: {[key: string]: any}
+    /** Creates a eosjs compatible authority provider. */
+    abstract makeAuthorityProvider(): ApiInterfaces.AuthorityProvider
     /** Creates a eosjs compatible signature provider that can sign for the session public key. */
     abstract makeSignatureProvider(): ApiInterfaces.SignatureProvider
     /**
@@ -169,6 +171,10 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         return this.link.makeSignatureProvider([this.publicKey], this)
     }
 
+    public makeAuthorityProvider(): ApiInterfaces.AuthorityProvider {
+        return this.link.makeAuthorityProvider()
+    }
+
     transact(args: TransactArgs) {
         return this.link.transact(args, this)
     }
@@ -228,6 +234,10 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
 
     public makeSignatureProvider(): ApiInterfaces.SignatureProvider {
         return this.link.makeSignatureProvider([this.publicKey], this)
+    }
+
+    public makeAuthorityProvider(): ApiInterfaces.AuthorityProvider {
+        return this.link.makeAuthorityProvider()
     }
 
     transact(args: TransactArgs) {
