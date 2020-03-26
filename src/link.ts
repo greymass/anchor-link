@@ -223,7 +223,7 @@ export class Link implements esr.AbiProvider {
             )
         }
         const auth = permission.required_auth
-        const keyAuth = auth.keys.find(({key}) => key === signerKey)
+        const keyAuth = auth.keys.find(({key}) => convertLegacyPublicKey(key) === convertLegacyPublicKey(signerKey))
         if (!keyAuth) {
             throw new IdentityError(`${formatAuth(signer)} has no key matching id signature`)
         }
