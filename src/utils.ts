@@ -1,4 +1,4 @@
-import {Serialize} from 'eosjs'
+import {Numeric, Serialize} from 'eosjs'
 import * as ecc from 'eosjs-ecc'
 
 import {Bytes, SealedMessage} from './link-abi'
@@ -41,4 +41,17 @@ export function sealMessage(message: string, privateKey: string, publicKey: stri
         checksum: res.checksum,
     }
     return abiEncode(data, 'sealed_message')
+}
+
+/** Ensure public key is in new PUB_ format. */
+export function normalizePublicKey(key: string) {
+    if (key.startsWith('PUB_')) {
+        return key
+    }
+    return Numeric.publicKeyToString(Numeric.stringToPublicKey('EOS' + key.substr(-50)))
+}
+
+/** Return true if given public keys are equal. */
+export function publicKeyEqual(keyA: string, keyB: string) {
+    return normalizePublicKey(keyA) === normalizePublicKey(keyB)
 }

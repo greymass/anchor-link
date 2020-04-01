@@ -1,5 +1,5 @@
 import * as esr from 'eosio-signing-request'
-import {ApiInterfaces, JsonRpc, Numeric} from 'eosjs'
+import {ApiInterfaces, JsonRpc} from 'eosjs'
 import * as ecc from 'eosjs-ecc'
 import makeFetch from 'fetch-ponyfill'
 import * as zlib from 'pako'
@@ -11,7 +11,7 @@ import {LinkCreate} from './link-abi'
 import {defaults, LinkOptions} from './link-options'
 import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkTransport} from './link-transport'
-import {abiEncode} from './utils'
+import {abiEncode, normalizePublicKey, publicKeyEqual} from './utils'
 
 const {fetch} = makeFetch()
 
@@ -223,7 +223,7 @@ export class Link implements esr.AbiProvider {
             )
         }
         const auth = permission.required_auth
-        const keyAuth = auth.keys.find(({key}) => convertLegacyPublicKey(key) === convertLegacyPublicKey(signerKey))
+        const keyAuth = auth.keys.find(({key}) => publicKeyEqual(key, signerKey))
         if (!keyAuth) {
             throw new IdentityError(`${formatAuth(signer)} has no key matching id signature`)
         }
@@ -324,20 +324,21 @@ export class Link implements esr.AbiProvider {
         }
     }
 
-    public makeAuthorityProvider() {
-        const { rpc } = this;
+    /**
+     * Create an eosjs authority provider using this link.
+     */
+    public makeAuthorityProvider(): ApiInterfaces.AuthorityProvider {
+        const {rpc} = this
         return {
-          async getRequiredKeys(args) {
-            const {
-                availableKeys,
-                transaction
-            } = args;
-            return convertLegacyPublicKeys((await rpc.fetch('/v1/chain/get_required_keys', {
-                transaction,
-                available_keys: convertLegacyPublicKeys(availableKeys),
-            })).required_keys);
-          }
-        };
+            async getRequiredKeys(args: ApiInterfaces.AuthorityProviderArgs) {
+                const {availableKeys, transaction} = args
+                const result = await rpc.fetch('/v1/chain/get_required_keys', {
+                    transaction,
+                    available_keys: availableKeys.map(normalizePublicKey),
+                })
+                return result.required_keys.map(normalizePublicKey)
+            },
+        }
     }
 }
 
@@ -419,21 +420,4 @@ function formatAuth(auth: esr.abi.PermissionLevel): string {
         permission = '<any>'
     }
     return `${actor}@${permission}`
-}
-
-function convertLegacyPublicKey(s) {
-  let pubkey = s;
-  // Convert Alternative Legacy to EOS for this process
-  if (['FIO'].includes(s.substr(0, 3))) {
-    pubkey = pubkey.replace(/^.{3}/g, 'EOS');
-  }
-  // Convert Legacy Keys
-  if (pubkey.substr(0, 3) === 'EOS') {
-    return Numeric.publicKeyToString(Numeric.stringToPublicKey(pubkey));
-  }
-  return pubkey;
-}
-
-function convertLegacyPublicKeys(keys) {
-  return keys.map(convertLegacyPublicKey);
 }
