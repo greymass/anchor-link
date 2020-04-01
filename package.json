@@ -25,6 +25,7 @@
   "homepage": "https://github.com/greymass/anchor-link#readme",
   "files": [
     "lib/*",
+    "src/*",
     "ws-browser.js"
   ],
   "dependencies": {
