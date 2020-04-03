@@ -1,6 +1,6 @@
 {
   "name": "anchor-link",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "description": "Library for authenticating and signing transactions using the Anchor Link protocol",
   "license": "MIT",
   "main": "./lib/index",
