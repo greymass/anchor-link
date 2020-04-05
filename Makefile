@@ -1,10 +1,16 @@
 SRC_FILES := $(shell find src -name '*.ts')
 
-all: lib
+all: lib lib/bundle.js lib/index.es5.js
 
 lib: $(SRC_FILES) node_modules tsconfig.json
 	./node_modules/.bin/tsc -p tsconfig.json --outDir lib
 	touch lib
+
+lib/bundle.js: $(SRC_FILES) node_modules tsconfig.json rollup.config.js
+	UNPKG_BUNDLE=1 ./node_modules/.bin/rollup -c
+
+lib/index.es5.js: $(SRC_FILES) node_modules tsconfig.json rollup.config.js
+	./node_modules/.bin/rollup -c
 
 .PHONY: update-abi-types
 update-abi-types: node_modules lib

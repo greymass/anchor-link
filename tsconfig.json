@@ -9,7 +9,7 @@
         "outDir": "lib",
         "sourceMap": true,
         "strict": true,
-        "target": "es5"
+        "target": "esnext"
     },
     "include": ["src/*"]
 }
