@@ -5,6 +5,10 @@ import json from '@rollup/plugin-json'
 import nodePolyfills from 'rollup-plugin-node-polyfills'
 import {terser} from 'rollup-plugin-terser'
 
+const tsconfigOverride = {
+    compilerOptions: {target: 'ES5'}
+}
+
 let config
 
 if (process.env['UNPKG_BUNDLE']) {
@@ -13,8 +17,11 @@ if (process.env['UNPKG_BUNDLE']) {
         output: {
             name: 'AnchorLink',
             file: 'lib/bundle.js',
-            format: 'umd',
-            sourcemap: true
+            format: 'iife',
+            sourcemap: true,
+            exports: 'named',
+            // hack to get default export to work as global
+            outro: 'var _exports = exports; exports = _exports.default; for (var key in _exports) { exports[key] = _exports[key] };'
         },
         plugins: [
             commonjs({
@@ -25,7 +32,7 @@ if (process.env['UNPKG_BUNDLE']) {
             nodePolyfills(),
             json(),
             resolve({browser: true}),
-            typescript({tsconfigOverride: {target: 'es5'}}),
+            typescript({tsconfigOverride}),
             terser(),
         ]
     }
@@ -35,11 +42,13 @@ if (process.env['UNPKG_BUNDLE']) {
         output: {
             file: 'lib/index.es5.js',
             format: 'cjs',
-            sourcemap: true
+            sourcemap: true,
+            // another hack to get default export to work in cjs
+            outro: 'var _exports = exports; module.exports = _exports.default; for (var key in _exports) { module.exports[key] = _exports[key] };'
         },
         external: ['eosio-signing-request', 'eosjs', 'fetch-ponyfill', 'pako', 'uuid', 'ws', 'eosjs-ecc'],
         plugins: [
-            typescript({tsconfigOverride: {target: 'es5'}}),
+            typescript({tsconfigOverride}),
         ]
     }
 }
