@@ -21,16 +21,24 @@ update-abi-types: node_modules lib
 lint: node_modules
 	NODE_ENV=test ./node_modules/.bin/tslint -p tsconfig.json -c tslint.json -t stylish --fix
 
-.PHONY: test
-test: node_modules
-	./node_modules/.bin/mocha --require ts-node/register test/*.ts --grep '$(grep)'
+docs: $(SRC_FILES) node_modules
+	./node_modules/.bin/typedoc \
+		--mode file --stripInternal \
+		--excludeNotExported --excludePrivate --excludeProtected \
+		--name "Anchor Link" --readme none \
+		--out docs \
+		src/index.ts
+
+.PHONY: deploy-docs
+deploy-docs: docs
+	./node_modules/.bin/gh-pages -d docs
 
 node_modules:
 	yarn install --non-interactive --frozen-lockfile
 
 .PHONY: clean
 clean:
-	rm -rf lib/
+	rm -rf lib/ docs/
 
 .PHONY: distclean
 distclean: clean

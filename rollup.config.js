@@ -43,10 +43,11 @@ if (process.env['UNPKG_BUNDLE']) {
             file: 'lib/index.es5.js',
             format: 'cjs',
             sourcemap: true,
+            exports: 'named',
             // another hack to get default export to work in cjs
             outro: 'var _exports = exports; module.exports = _exports.default; for (var key in _exports) { module.exports[key] = _exports[key] };'
         },
-        external: ['eosio-signing-request', 'eosjs', 'fetch-ponyfill', 'pako', 'uuid', 'ws', 'eosjs-ecc'],
+        external: ['eosio-signing-request', 'eosjs', 'fetch-ponyfill', 'pako', 'uuid', 'isomorphic-ws', 'eosjs-ecc'],
         plugins: [
             typescript({tsconfigOverride}),
         ]

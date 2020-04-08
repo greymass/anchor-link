@@ -9,14 +9,20 @@ import {v4 as uuid} from 'uuid'
 import {CancelError, IdentityError} from './errors'
 import {LinkCreate} from './link-abi'
 import {defaults, LinkOptions} from './link-options'
-import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
+import {
+    LinkChannelSession,
+    LinkFallbackSession,
+    LinkSession,
+    SerializedLinkSession,
+} from './link-session'
 import {LinkTransport} from './link-transport'
 import {abiEncode, normalizePublicKey, publicKeyEqual} from './utils'
 
-const {fetch} = makeFetch()
+/** @internal */
+const fetch = makeFetch().fetch
 
 /**
- * Arguments accepted by the `Link::transact` method.
+ * Arguments accepted by the [[Link.transact]] method.
  * Note that one of `action`, `actions` or `transaction` must be set.
  */
 export interface TransactArgs {
@@ -34,7 +40,7 @@ export interface TransactArgs {
 }
 
 /**
- * The result of a `Link::transact` call.
+ * The result of a [[Link.transact]] call.
  */
 export interface TransactResult {
     /** The signing request that was sent. */
@@ -53,21 +59,43 @@ export interface TransactResult {
     processed?: {[key: string]: any}
 }
 
+/**
+ * Main class, also exposed as the default export of the library.
+ *
+ * Example:
+ *
+ * ```ts
+ * import AnchorLink from 'anchor-link'
+ * import ConsoleTransport from 'anchor-link-console-transport'
+ *
+ * const link = new AnchorLink({
+ *     transport: new ConsoleTransport()
+ * })
+ *
+ * const result = await link.transact({actions: myActions, broadcast: true})
+ * ```
+ */
 export class Link implements esr.AbiProvider {
+    /** The eosjs RPC instance used to communicate with the EOSIO node. */
     public readonly rpc: JsonRpc
+    /** Transport used to deliver requests to the user wallet. */
     public readonly transport: LinkTransport
+    /** EOSIO ChainID for which requests are valid. */
     public readonly chainId: string | esr.ChainName
 
     private serviceAddress: string
     private requestOptions: esr.SigningRequestEncodingOptions
     private abiCache = new Map<string, any>()
 
+    /** Create a new link instance. */
     constructor(options: LinkOptions) {
         if (typeof options !== 'object') {
             throw new TypeError('Missing options object')
         }
         if (!options.transport) {
-            throw new TypeError('options.transport is requred, see https://github.com/greymass/anchor-link#transports')
+            throw new TypeError(
+                'options.transport is required, see https://github.com/greymass/anchor-link#transports'
+            )
         }
         if (options.rpc === undefined || typeof options.rpc === 'string') {
             this.rpc = new JsonRpc(options.rpc || defaults.rpc, {fetch: fetch as any})
@@ -85,6 +113,10 @@ export class Link implements esr.AbiProvider {
         }
     }
 
+    /**
+     * Fetch the ABI for given account, cached.
+     * @internal
+     */
     public async getAbi(account: string) {
         let rv = this.abiCache.get(account)
         if (!rv) {
@@ -96,10 +128,18 @@ export class Link implements esr.AbiProvider {
         return rv
     }
 
+    /**
+     * Create a new unique buoy callback url.
+     * @internal
+     */
     public createCallbackUrl() {
         return `${this.serviceAddress}/${uuid()}`
     }
 
+    /**
+     * Create a SigningRequest instance configured for this link.
+     * @internal
+     */
     public async createRequest(args: esr.SigningRequestCreateArguments) {
         // generate unique callback url
         const request = await esr.SigningRequest.create(
@@ -117,7 +157,15 @@ export class Link implements esr.AbiProvider {
         return request
     }
 
-    public async sendRequest(request: esr.SigningRequest, transport?: LinkTransport, broadcast = false) {
+    /**
+     * Send a SigningRequest instance using this link.
+     * @internal
+     */
+    public async sendRequest(
+        request: esr.SigningRequest,
+        transport?: LinkTransport,
+        broadcast = false
+    ) {
         const t = transport || this.transport
         try {
             const linkUrl = request.data.callback
@@ -183,6 +231,7 @@ export class Link implements esr.AbiProvider {
         }
     }
 
+    /** Sign and optionally broadcast a EOSIO transaction, action or actions. */
     public async transact(args: TransactArgs, transport?: LinkTransport): Promise<TransactResult> {
         const t = transport || this.transport
         const broadcast = args.broadcast || false
@@ -258,12 +307,14 @@ export class Link implements esr.AbiProvider {
 
     /**
      * Login and create a persistent session.
+     * @param identifier The session identifier, an EOSIO name (`[a-z1-5]{1,12}`).
+     *                   Should be set to the contract account applicable.
      */
-    public async login(sessionName: string) {
+    public async login(identifier: string) {
         const privateKey = await ecc.randomKey()
         const requestKey = ecc.privateToPublic(privateKey)
         const createInfo: LinkCreate = {
-            session_name: sessionName,
+            session_name: identifier,
             request_key: requestKey,
         }
         const res = await this.identify(undefined, {
@@ -303,8 +354,30 @@ export class Link implements esr.AbiProvider {
     }
 
     /**
-     * Create an eosjs signature provider using this link.
-     * Note that we don't know what keys are available so those have to be provided.
+     * Restore previous session, see [[Link.login]] to create a new session.
+     *
+     * Example:
+     *
+     * ```ts
+     * let session = await myLink.login('mycontract')
+     * let data = session.serialize()
+     * // a little longer than a few moments later...
+     * let restored = myLink.restore(data)
+     * let result = await restored.transact({action: myAction})
+     * ```
+     *
+     * @param data The serialized session data obtained by calling [[LinkSession.serialize]].
+     **/
+    public restoreSession(data: SerializedLinkSession) {
+        return LinkSession.restore(this, data)
+    }
+
+    /**
+     * Create an eosjs compatible signature provider using this link.
+     * @param availableKeys Keys the created provider will claim to be able to sign for.
+     * @param transport (internal) Transport override for this call.
+     * @note We don't know what keys are available so those have to be provided,
+     *       to avoid this use [[LinkSession.makeSignatureProvider]] instead. Sessions can be created with [[Link.login]].
      */
     public makeSignatureProvider(
         availableKeys: string[],
@@ -331,6 +404,7 @@ export class Link implements esr.AbiProvider {
 
     /**
      * Create an eosjs authority provider using this link.
+     * @note Uses the configured RPC Node's `/v1/chain/get_required_keys` API to resolve keys.
      */
     public makeAuthorityProvider(): ApiInterfaces.AuthorityProvider {
         const {rpc} = this
@@ -347,6 +421,10 @@ export class Link implements esr.AbiProvider {
     }
 }
 
+/**
+ * Connect to a WebSocket channel wait for a message.
+ * @internal
+ */
 function waitForCallback(url: string, ctx: {cancel?: () => void}) {
     return new Promise<esr.CallbackPayload>((resolve, reject) => {
         let active = true
@@ -410,12 +488,16 @@ function waitForCallback(url: string, ctx: {cancel?: () => void}) {
 /**
  * Exponential backoff function that caps off at 10s after 10 tries.
  * https://i.imgur.com/IrUDcJp.png
+ * @internal
  */
 function backoff(tries: number): number {
     return Math.min(Math.pow(tries * 10, 2), 10 * 1000)
 }
 
-/** Format a EOSIO permission level in the format `actor@permission` taking placeholders into consideration. */
+/**
+ * Format a EOSIO permission level in the format `actor@permission` taking placeholders into consideration.
+ * @internal
+ */
 function formatAuth(auth: esr.abi.PermissionLevel): string {
     let {actor, permission} = auth
     if (actor === esr.PlaceholderName) {

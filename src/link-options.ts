@@ -2,6 +2,9 @@ import {ChainName} from 'eosio-signing-request'
 import {JsonRpc} from 'eosjs'
 import {LinkTransport} from './link-transport'
 
+/**
+ * Available options when creating a new [[Link]] instance.
+ */
 export interface LinkOptions {
     /**
      * Link transport responsible for presenting signing requests to user, required.
@@ -32,6 +35,7 @@ export interface LinkOptions {
     textDecoder?: TextDecoder
 }
 
+/** @internal */
 export const defaults = {
     chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
     rpc: 'https://eos.greymass.com',

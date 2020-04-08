@@ -16,9 +16,9 @@ export interface LinkTransport {
      */
     onRequest(request: SigningRequest, cancel: (reason: string | Error) => void): void
     /** Called if the request was successful. */
-    onSuccess?(request: SigningRequest, result: TransactResult)
+    onSuccess?(request: SigningRequest, result: TransactResult): void
     /** Called if the request failed. */
-    onFailure?(request: SigningRequest, error: Error)
+    onFailure?(request: SigningRequest, error: Error): void
     /**
      * Called when a session request is initiated.
      * @param session Session where the request originated.
@@ -28,5 +28,5 @@ export interface LinkTransport {
         session: LinkSession,
         request: SigningRequest,
         cancel: (reason: string | Error) => void
-    )
+    ): void
 }

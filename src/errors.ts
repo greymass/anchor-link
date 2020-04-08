@@ -1,4 +1,16 @@
-/** Error that is thrown if a LinkPresenter calls the cancel callback. */
+/**
+ * Error codes. Accessible using the `code` property on errors thrown by [[Link]] and [[LinkSession]].
+ * - `E_DELIVERY`: Unable to request message to wallet.
+ * - `E_TIMEOUT`: Request was delivered but user/wallet didn't respond in time.
+ * - `E_CANCEL`: The [[LinkTransport]] canceled the request.
+ * - `E_IDENTITY`: Identity proof failed to verify.
+ */
+export type LinkErrorCode = 'E_DELIVERY' | 'E_TIMEOUT' | 'E_CANCEL' | 'E_IDENTITY'
+
+/**
+ * Error that is thrown if a [[LinkTransport]] cancels a request.
+ * @internal
+ */
 export class CancelError extends Error {
     public code = 'E_CANCEL'
     constructor(reason?: string) {
@@ -6,7 +18,10 @@ export class CancelError extends Error {
     }
 }
 
-/** Error that is thrown if an identity request fails to verify. */
+/**
+ * Error that is thrown if an identity request fails to verify.
+ * @internal
+ */
 export class IdentityError extends Error {
     public code = 'E_IDENTITY'
     constructor(reason?: string) {
@@ -15,16 +30,12 @@ export class IdentityError extends Error {
 }
 
 /**
- * Session error codes.
- * - E_DELIVERY: Unable to request message to wallet.
- * - E_TIMEOUT: Request was delivered but user/wallet didn't respond in time.
+ * Error originating from a [[LinkSession]].
+ * @internal
  */
-export type SessionErrorCode = 'E_DELIVERY' | 'E_TIMEOUT'
-
-/** Error that is thrown by session transport. */
 export class SessionError extends Error {
-    public code: SessionErrorCode
-    constructor(reason: string, code: SessionErrorCode) {
+    public code: 'E_DELIVERY' | 'E_TIMEOUT'
+    constructor(reason: string, code: 'E_DELIVERY' | 'E_TIMEOUT') {
         super(reason)
         this.code = code
     }

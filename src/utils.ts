@@ -4,8 +4,13 @@ import * as ecc from 'eosjs-ecc'
 import {Bytes, SealedMessage} from './link-abi'
 import linkAbi from './link-abi-data'
 
+/** @internal */
 const types = Serialize.getTypesFromAbi(Serialize.createInitialTypes(), linkAbi)
 
+/**
+ * Helper to ABI encode value.
+ * @internal
+ */
 export function abiEncode(value: any, typeName: string): Uint8Array {
     let type = types.get(typeName)
     if (!type) {
@@ -16,6 +21,10 @@ export function abiEncode(value: any, typeName: string): Uint8Array {
     return buf.asUint8Array()
 }
 
+/**
+ * Helper to ABI decode data.
+ * @internal
+ */
 export function abiDecode<ResultType = any>(data: Bytes, typeName: string): ResultType {
     let type = types.get(typeName)
     if (!type) {
@@ -32,6 +41,10 @@ export function abiDecode<ResultType = any>(data: Bytes, typeName: string): Resu
     return type.deserialize(buf) as ResultType
 }
 
+/**
+ * Encrypt a message using AES and shared secret derived from given keys.
+ * @internal
+ */
 export function sealMessage(message: string, privateKey: string, publicKey: string) {
     const res = ecc.Aes.encrypt(privateKey, publicKey, message)
     const data: SealedMessage = {
@@ -43,7 +56,10 @@ export function sealMessage(message: string, privateKey: string, publicKey: stri
     return abiEncode(data, 'sealed_message')
 }
 
-/** Ensure public key is in new PUB_ format. */
+/**
+ * Ensure public key is in new PUB_ format.
+ * @internal
+ */
 export function normalizePublicKey(key: string) {
     if (key.startsWith('PUB_')) {
         return key
@@ -51,7 +67,10 @@ export function normalizePublicKey(key: string) {
     return Numeric.publicKeyToString(Numeric.stringToPublicKey('EOS' + key.substr(-50)))
 }
 
-/** Return true if given public keys are equal. */
+/**
+ * Return true if given public keys are equal.
+ * @internal
+ */
 export function publicKeyEqual(keyA: string, keyB: string) {
     return normalizePublicKey(keyA) === normalizePublicKey(keyB)
 }

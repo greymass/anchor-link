@@ -2,7 +2,7 @@ import {SigningRequest} from 'eosio-signing-request'
 import {ApiInterfaces} from 'eosjs'
 
 import {SessionError} from './errors'
-import {Link, TransactArgs} from './link'
+import {Link, TransactArgs, TransactResult} from './link'
 import {LinkInfo} from './link-abi'
 import {LinkTransport} from './link-transport'
 import {abiEncode, sealMessage} from './utils'
@@ -30,11 +30,10 @@ export abstract class LinkSession {
     /** Creates a eosjs compatible signature provider that can sign for the session public key. */
     abstract makeSignatureProvider(): ApiInterfaces.SignatureProvider
     /**
-     * Transact using this session.
-     * @see Link#transact
+     * Transact using this session. See [[Link.transact]].
      */
-    abstract transact(args: TransactArgs)
-    /** Returns a JSON-encodable object that can be passed to the constructor to recreate the session. */
+    abstract transact(args: TransactArgs): Promise<TransactResult>
+    /** Returns a JSON-encodable object that can be used recreate the session. */
     abstract serialize(): SerializedLinkSession
     /** Restore a previously serialized session. */
     static restore(link: Link, data: SerializedLinkSession): LinkSession {
@@ -49,7 +48,8 @@ export abstract class LinkSession {
     }
 }
 
-interface SerializedLinkSession {
+/** @internal */
+export interface SerializedLinkSession {
     type: string
     metadata: {[key: string]: any}
     data: any
@@ -64,6 +64,7 @@ interface ChannelInfo {
     url: string
 }
 
+/** @internal */
 export interface LinkChannelSessionData {
     /** Authenticated user permission. */
     auth: {
@@ -80,6 +81,7 @@ export interface LinkChannelSessionData {
 
 /**
  * Link session that pushes requests over a channel.
+ * @internal
  */
 export class LinkChannelSession extends LinkSession implements LinkTransport {
     readonly link: Link
@@ -180,6 +182,7 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
     }
 }
 
+/** @internal */
 export interface LinkFallbackSessionData {
     auth: {
         actor: string
@@ -188,6 +191,10 @@ export interface LinkFallbackSessionData {
     publicKey: string
 }
 
+/**
+ * Link session that sends every request over the transport.
+ * @internal
+ */
 export class LinkFallbackSession extends LinkSession implements LinkTransport {
     readonly link: Link
     readonly auth: {
