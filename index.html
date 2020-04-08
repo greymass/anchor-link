@@ -1,0 +1,172 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Anchor Link</title>
+	<meta name="description" content="Documentation for Anchor Link">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">Anchor Link</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="index.html">Globals</a>
+				</li>
+			</ul>
+			<h1>Anchor Link</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section tsd-is-external">
+							<h3>Classes</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-class tsd-is-external"><a href="classes/link.html" class="tsd-kind-icon">Link</a></li>
+								<li class="tsd-kind-class tsd-is-external"><a href="classes/linksession.html" class="tsd-kind-icon">Link<wbr>Session</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-external">
+							<h3>Interfaces</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/channelinfo.html" class="tsd-kind-icon">Channel<wbr>Info</a></li>
+								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/linkoptions.html" class="tsd-kind-icon">Link<wbr>Options</a></li>
+								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a></li>
+								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a></li>
+								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/transactresult.html" class="tsd-kind-icon">Transact<wbr>Result</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-external">
+							<h3>Type aliases</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias tsd-is-external"><a href="index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-external">
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-is-external">
+					<a name="linkerrorcode" class="tsd-anchor"></a>
+					<h3>Link<wbr>Error<wbr>Code</h3>
+					<div class="tsd-signature tsd-kind-icon">Link<wbr>Error<wbr>Code<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"E_DELIVERY"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"E_TIMEOUT"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"E_CANCEL"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"E_IDENTITY"</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/errors.ts#L8">src/errors.ts:8</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Error codes. Accessible using the <code>code</code> property on errors thrown by <a href="classes/link.html">Link</a> and <a href="classes/linksession.html">LinkSession</a>.</p>
+							<ul>
+								<li><code>E_DELIVERY</code>: Unable to request message to wallet.</li>
+								<li><code>E_TIMEOUT</code>: Request was delivered but user/wallet didn&#39;t respond in time.</li>
+								<li><code>E_CANCEL</code>: The <a href="interfaces/linktransport.html">LinkTransport</a> canceled the request.</li>
+								<li><code>E_IDENTITY</code>: Identity proof failed to verify.</li>
+							</ul>
+						</div>
+					</div>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals current ">
+						<a href="index.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/link.html" class="tsd-kind-icon">Link</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/linksession.html" class="tsd-kind-icon">Link<wbr>Session</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/channelinfo.html" class="tsd-kind-icon">Channel<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/linkoptions.html" class="tsd-kind-icon">Link<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/transactresult.html" class="tsd-kind-icon">Transact<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
