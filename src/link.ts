@@ -63,6 +63,12 @@ export class Link implements esr.AbiProvider {
     private abiCache = new Map<string, any>()
 
     constructor(options: LinkOptions) {
+        if (typeof options !== 'object') {
+            throw new TypeError('Missing options object')
+        }
+        if (!options.transport) {
+            throw new TypeError('options.transport is requred, see https://github.com/greymass/anchor-link#transports')
+        }
         if (options.rpc === undefined || typeof options.rpc === 'string') {
             this.rpc = new JsonRpc(options.rpc || defaults.rpc, {fetch: fetch as any})
         } else {
