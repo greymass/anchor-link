@@ -117,7 +117,7 @@ export class Link implements esr.AbiProvider {
         return request
     }
 
-    public async sendRequest(request: esr.SigningRequest, transport?: LinkTransport) {
+    public async sendRequest(request: esr.SigningRequest, transport?: LinkTransport, broadcast = false) {
         const t = transport || this.transport
         try {
             const linkUrl = request.data.callback
@@ -164,6 +164,13 @@ export class Link implements esr.AbiProvider {
                 payload,
                 signer,
             }
+            if (broadcast) {
+                const res = await this.rpc.push_transaction({
+                    signatures: result.signatures,
+                    serializedTransaction: result.serializedTransaction,
+                })
+                result.processed = res.processed
+            }
             if (t.onSuccess) {
                 t.onSuccess(request, result)
             }
@@ -178,17 +185,9 @@ export class Link implements esr.AbiProvider {
 
     public async transact(args: TransactArgs, transport?: LinkTransport): Promise<TransactResult> {
         const t = transport || this.transport
-        const request = await this.createRequest(args)
-        const result = await this.sendRequest(request, t)
-        // broadcast transaction if requested
         const broadcast = args.broadcast || false
-        if (broadcast) {
-            const res = await this.rpc.push_transaction({
-                signatures: result.signatures,
-                serializedTransaction: result.serializedTransaction,
-            })
-            result.processed = res.processed
-        }
+        const request = await this.createRequest(args)
+        const result = await this.sendRequest(request, t, broadcast)
         return result
     }
 
