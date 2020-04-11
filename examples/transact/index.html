@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anchor Link - Transact</title>
+    <script src="https://unpkg.com/anchor-link"></script>
+    <script src="https://unpkg.com/anchor-link-browser-transport"></script>
+    <script>
+        // initialize the browser transport
+        const transport = new AnchorLinkBrowserTransport()
+        // initialize the link, this time we are using the TELOS chain
+        const link = new AnchorLink({transport,
+            chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11',
+            rpc: 'https://telos.greymass.com'
+        })
+        // the EOSIO action we want to sign and broadcast
+        const action = {
+            account: 'eosio',
+            name: 'voteproducer',
+            authorization: [{
+                actor: '............1', // ............1 will be resolved to the signing accounts permission
+                permission: '............2' // ............2 will be resolved to the signing accounts authority
+            }],
+            data: {
+                voter: '............1',
+                proxy: 'coredevproxy',
+                producers: [],
+            }
+        }
+        // ask the user to sign the transaction and then broadcast to chain
+        function vote() {
+            link.transact({action, broadcast: true})
+                .then((result) => {
+                    document.body.innerHTML = `<h1>Thank you ${ result.signer.actor }!</h1>`
+                })
+        }
+    </script>
+</head>
+<body>
+    <button onclick="vote()">Vote for Greymass on EOS mainnet!</button>
+</body>
+</html>
