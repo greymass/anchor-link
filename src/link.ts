@@ -16,7 +16,7 @@ import {
     SerializedLinkSession,
 } from './link-session'
 import {LinkTransport} from './link-transport'
-import {abiEncode, normalizePublicKey, publicKeyEqual} from './utils'
+import {abiEncode, normalizePublicKey, publicKeyEqual, generatePrivateKey} from './utils'
 
 /** @internal */
 const fetch = makeFetch().fetch
@@ -311,7 +311,7 @@ export class Link implements esr.AbiProvider {
      *                   Should be set to the contract account applicable.
      */
     public async login(identifier: string) {
-        const privateKey = await ecc.randomKey()
+        const privateKey = await generatePrivateKey()
         const requestKey = ecc.privateToPublic(privateKey)
         const createInfo: LinkCreate = {
             session_name: identifier,

@@ -74,3 +74,18 @@ export function normalizePublicKey(key: string) {
 export function publicKeyEqual(keyA: string, keyB: string) {
     return normalizePublicKey(keyA) === normalizePublicKey(keyB)
 }
+
+/**
+ * Generate a random private key.
+ * Uses browser crypto if available, otherwise falls back to slow eosjs-ecc.
+ * @internal
+ */
+export async function generatePrivateKey() {
+    if (window && window.crypto) {
+        const data = new Uint32Array(32)
+        window.crypto.getRandomValues(data)
+        return ecc.PrivateKey.fromBuffer(Buffer.from(data))
+    } else {
+        return await ecc.randomKey()
+    }
+}
