@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anchor Link - Login</title>
+    <script src="https://unpkg.com/anchor-link"></script>
+    <script src="https://unpkg.com/anchor-link-browser-transport"></script>
+    <script>
+        // initialize the browser transport
+        const transport = new AnchorLinkBrowserTransport()
+        // initialize the link
+        const link = new AnchorLink({transport})
+        // the session instance, either restored using link.restoreSession() or created with link.login()
+        let session 
+
+        // tries to restore session, called when document is loaded
+        function restoreSession() {
+            let sessionData = localStorage.getItem('example-session')
+            if (sessionData) {
+                try {
+                    session = link.restoreSession(JSON.parse(sessionData))
+                    didLogin()
+                } catch (error) {
+                    console.warn('Unable to restore session', error)
+                }
+            }
+        }
+
+        // login and store session if sucessful
+        function login() {
+            link.login('example').then((result) => {
+                session = result.session
+                localStorage.setItem('example-session', JSON.stringify(session.serialize()))
+                didLogin()
+            })
+        }
+
+        // logout and remove session from storage
+        function logout() {
+            document.body.classList.remove('logged-in')
+            localStorage.removeItem('example-session')
+        }
+
+        // called when session was restored or created
+        function didLogin() {
+            document.getElementById('account-name').textContent = session.auth.actor
+            document.body.classList.add('logged-in')
+        }
+
+        // transfer tokens using a session
+        function transfer() {
+            const action = {
+                account: 'eosio.token',
+                name: 'transfer',
+                authorization: [session.auth],
+                data: {
+                    from: session.auth.actor,
+                    to: 'teamgreymass',
+                    quantity: '0.0001 EOS',
+                    memo: 'Anchor is the best! Thank you <3'
+                }
+            }
+            session.transact({action, broadcast: true}).then((result) => {
+                document.getElementById('log').innerHTML += `Transaction broadcast! ${ result.processed.id }\n`
+            })
+        }
+
+        // ¯\_(ツ)_/¯
+        window.addEventListener('keypress', (event) => {
+            if (event.key === 'F' || event.key === 'f') {
+                transfer()
+            }
+        })
+    </script>
+    <style>
+        .logged-in #login-ui {
+            display: none;
+        }
+        #app-ui {
+            display: none;
+        }
+        .logged-in #app-ui {
+            display: block;
+        }
+    </style>
+</head>
+<body onload="restoreSession()">
+    <div id="app-ui">
+        <p>Welcome <b id="account-name">foo</b>!</p>
+        <ul>
+            <li><button onclick="transfer()">Send an homage to team Greymass</button></li>
+            <li><button onclick="logout()">Log out</button></li>
+        </ul>
+        <p><small>Press F to pay respects</small></p>
+        <pre id="log"></pre>
+    </div>
+    <div id="login-ui">
+        <button onclick="login()">Login</button>
+    </div>
+</body>
+</html>
