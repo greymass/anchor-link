@@ -29,8 +29,9 @@ docs: $(SRC_FILES) node_modules
 		--out docs \
 		src/index.ts
 
-.PHONY: deploy-docs
-deploy-docs: docs
+.PHONY: deploy-site
+deploy-site: docs
+	cp -r ./examples ./docs/examples/
 	./node_modules/.bin/gh-pages -d docs
 
 node_modules:
