@@ -60,6 +60,24 @@ export interface TransactResult {
 }
 
 /**
+ * The result of a [[Link.identify]] call.
+ */
+export interface IdentifyResult extends TransactResult  {
+    /** The identified account. */
+    account: object
+    /** The public key that signed the identity proof.  */
+    signerKey: string
+}
+
+/**
+ * The result of a [[Link.login]] call.
+ */
+export interface LoginResult extends IdentifyResult  {
+    /** The session created by the login. */
+    session: LinkSession
+}
+
+/**
  * Main class, also exposed as the default export of the library.
  *
  * Example:
@@ -231,7 +249,18 @@ export class Link implements esr.AbiProvider {
         }
     }
 
-    /** Sign and optionally broadcast a EOSIO transaction, action or actions. */
+    /**
+     * Sign and optionally broadcast a EOSIO transaction, action or actions.
+     *
+     * Example:
+     *
+     * ```ts
+     * let result = await myLink.transact({transaction: myTx})
+     * ```
+     *
+     * @param args The transact arguments.
+     * @param transport Transport override, for internal use.
+     */
     public async transact(args: TransactArgs, transport?: LinkTransport): Promise<TransactResult> {
         const t = transport || this.transport
         const broadcast = args.broadcast || false
@@ -241,14 +270,15 @@ export class Link implements esr.AbiProvider {
     }
 
     /**
-     * Create a identity request.
+     * Send an identity request and verify the identity proof.
      * @param requestPermission Optional request permission if the request is for a specific account or permission.
      * @param info Metadata to add to the request.
+     * @note This is for advanced use-cases, you probably want to use [[Link.login]] instead.
      */
     public async identify(
         requestPermission?: esr.abi.PermissionLevel,
         info?: {[key: string]: string | Uint8Array}
-    ) {
+    ): Promise<IdentifyResult> {
         const request = await this.createRequest({
             identity: {permission: requestPermission || null},
             info,
@@ -308,9 +338,9 @@ export class Link implements esr.AbiProvider {
     /**
      * Login and create a persistent session.
      * @param identifier The session identifier, an EOSIO name (`[a-z1-5]{1,12}`).
-     *                   Should be set to the contract account applicable.
+     *                   Should be set to the contract account if applicable.
      */
-    public async login(identifier: string) {
+    public async login(identifier: string): Promise<LoginResult> {
         const privateKey = await generatePrivateKey()
         const requestKey = ecc.privateToPublic(privateKey)
         const createInfo: LinkCreate = {

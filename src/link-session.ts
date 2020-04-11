@@ -55,6 +55,7 @@ export interface SerializedLinkSession {
     data: any
 }
 
+/** @internal */
 interface ChannelInfo {
     /** Public key requests are encrypted to. */
     key: string
