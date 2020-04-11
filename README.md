@@ -60,7 +60,7 @@ Import them into your project:
 
 ```js
 const AnchorLink = require('anchor-link')
-const AnchorLinkConsoleTransport = require('anchor-link-browser-transport')
+const AnchorLinkConsoleTransport = require('anchor-link-console-transport')
 ```
 
 ## Basic usage
