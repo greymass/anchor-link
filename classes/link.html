@@ -138,7 +138,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L88">src/link.ts:88</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L106">src/link.ts:106</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -165,7 +165,7 @@
 					<div class="tsd-signature tsd-kind-icon">chain<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ChainName</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L84">src/link.ts:84</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L102">src/link.ts:102</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -180,7 +180,7 @@
 					<div class="tsd-signature tsd-kind-icon">rpc<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">JsonRpc</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L80">src/link.ts:80</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L98">src/link.ts:98</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -195,7 +195,7 @@
 					<div class="tsd-signature tsd-kind-icon">transport<span class="tsd-signature-symbol">:</span> <a href="../interfaces/linktransport.html" class="tsd-signature-type">LinkTransport</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L82">src/link.ts:82</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L100">src/link.ts:100</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -211,19 +211,24 @@
 					<a name="identify" class="tsd-anchor"></a>
 					<h3>identify</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-external">
-						<li class="tsd-signature tsd-kind-icon">identify<span class="tsd-signature-symbol">(</span>requestPermission<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">esr.abi.PermissionLevel</span>, info<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>account<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">; </span>signerKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">identify<span class="tsd-signature-symbol">(</span>requestPermission<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">esr.abi.PermissionLevel</span>, info<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{}</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/identifyresult.html" class="tsd-signature-type">IdentifyResult</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L248">src/link.ts:248</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L267">src/link.ts:267</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Create a identity request.</p>
+									<p>Send an identity request and verify the identity proof.</p>
 								</div>
+								<dl class="tsd-comment-tags">
+									<dt>note</dt>
+									<dd><p>This is for advanced use-cases, you probably want to use <a href="link.html#login">Link.login</a> instead.</p>
+									</dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -240,7 +245,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>account<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">; </span>signerKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/identifyresult.html" class="tsd-signature-type">IdentifyResult</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -248,13 +253,13 @@
 					<a name="login" class="tsd-anchor"></a>
 					<h3>login</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-external">
-						<li class="tsd-signature tsd-kind-icon">login<span class="tsd-signature-symbol">(</span>identifier<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>session<span class="tsd-signature-symbol">: </span><a href="linksession.html" class="tsd-signature-type">LinkSession</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">login<span class="tsd-signature-symbol">(</span>identifier<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/loginresult.html" class="tsd-signature-type">LoginResult</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L313">src/link.ts:313</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L332">src/link.ts:332</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -272,7 +277,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span>session<span class="tsd-signature-symbol">: </span><a href="linksession.html" class="tsd-signature-type">LinkSession</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/loginresult.html" class="tsd-signature-type">LoginResult</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -286,7 +291,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L409">src/link.ts:409</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L428">src/link.ts:428</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -313,7 +318,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L382">src/link.ts:382</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L401">src/link.ts:401</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -356,7 +361,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L371">src/link.ts:371</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L390">src/link.ts:390</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -393,7 +398,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/9202a38/src/link.ts#L235">src/link.ts:235</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/218a20a/src/link.ts#L253">src/link.ts:253</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -469,13 +474,16 @@
 						<a href="linksession.html" class="tsd-kind-icon">Link<wbr>Session</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
-						<a href="../interfaces/channelinfo.html" class="tsd-kind-icon">Channel<wbr>Info</a>
+						<a href="../interfaces/identifyresult.html" class="tsd-kind-icon">Identify<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="../interfaces/linkoptions.html" class="tsd-kind-icon">Link<wbr>Options</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="../interfaces/linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="../interfaces/loginresult.html" class="tsd-kind-icon">Login<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="../interfaces/transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a>
