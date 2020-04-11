@@ -72,7 +72,7 @@ const transport = new AnchorLinkBrowserTransport()
 const link = new AnchorLink({transport})
 ```
 
-Now you're ready to create signing requests for EOS main-net (see [options](#options) for how to use it on other networks).
+Now you're ready to create signing requests for EOS main-net (see [options](https://greymass.github.io/anchor-link/interfaces/linkoptions.html) for how to use it on other networks).
 
 ```ts
 const action = {
