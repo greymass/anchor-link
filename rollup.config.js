@@ -20,13 +20,17 @@ if (process.env['UNPKG_BUNDLE']) {
             format: 'iife',
             sourcemap: true,
             exports: 'named',
-            // hack to get default export to work as global
-            outro: 'var _exports = exports; exports = _exports.default; for (var key in _exports) { exports[key] = _exports[key] };'
+            outro: [
+                // hack to get default export to work as global
+                'var _exports = exports; exports = _exports.default; for (var key in _exports) { exports[key] = _exports[key] };',
+                // get Buffer working ¯\_(ツ)_/¯
+                'var Buffer = Buffer$1;',
+            ].join('\n')
         },
         plugins: [
             commonjs({
                 namedExports: {
-                    'eosjs-ecc': ['privateToPublic', 'randomKey', 'recover', 'Aes']
+                    'eosjs-ecc': ['privateToPublic', 'randomKey', 'recover', 'Aes', 'PrivateKey']
                 }
             }),
             nodePolyfills(),
