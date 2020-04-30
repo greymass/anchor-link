@@ -363,7 +363,7 @@ export class Link implements esr.AbiProvider {
                         key: res.payload.link_key,
                         name: res.payload.link_name,
                     },
-                    requestKey: privateKey.toWif(),
+                    requestKey: privateKey,
                 },
                 metadata
             )

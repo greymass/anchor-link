@@ -84,7 +84,7 @@ export async function generatePrivateKey() {
     if (window && window.crypto) {
         const data = new Uint32Array(32)
         window.crypto.getRandomValues(data)
-        return ecc.PrivateKey.fromBuffer(Buffer.from(data))
+        return ecc.PrivateKey.fromBuffer(Buffer.from(data)).toString()
     } else {
         return await ecc.randomKey()
     }
