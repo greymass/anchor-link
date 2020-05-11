@@ -28,7 +28,7 @@
     "src/*"
   ],
   "dependencies": {
-    "eosio-signing-request": "^1.1.1",
+    "eosio-signing-request": "^1.1.5",
     "eosjs": "^20.0.0",
     "eosjs-ecc": "^4.0.7",
     "fetch-ponyfill": "^6.1.0",
