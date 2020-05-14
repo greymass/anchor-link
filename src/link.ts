@@ -15,11 +15,15 @@ import {
     LinkSession,
     SerializedLinkSession,
 } from './link-session'
+import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
-import {abiEncode, normalizePublicKey, publicKeyEqual, generatePrivateKey} from './utils'
+import {abiEncode, generatePrivateKey, normalizePublicKey, publicKeyEqual} from './utils'
 
 /** @internal */
 const fetch = makeFetch().fetch
+
+/** EOSIO permission level with actor and signer, a.k.a. 'auth', 'authority' or 'account auth' */
+export type PermissionLevel = esr.abi.PermissionLevel
 
 /**
  * Arguments accepted by the [[Link.transact]] method.
@@ -50,7 +54,7 @@ export interface TransactResult {
     /** The callback payload. */
     payload: esr.CallbackPayload
     /** The signer authority. */
-    signer: esr.abi.PermissionLevel
+    signer: PermissionLevel
     /** The resulting transaction. */
     transaction: esr.abi.Transaction
     /** Serialized version of transaction. */
@@ -62,7 +66,7 @@ export interface TransactResult {
 /**
  * The result of a [[Link.identify]] call.
  */
-export interface IdentifyResult extends TransactResult  {
+export interface IdentifyResult extends TransactResult {
     /** The identified account. */
     account: object
     /** The public key that signed the identity proof.  */
@@ -72,7 +76,7 @@ export interface IdentifyResult extends TransactResult  {
 /**
  * The result of a [[Link.login]] call.
  */
-export interface LoginResult extends IdentifyResult  {
+export interface LoginResult extends IdentifyResult {
     /** The session created by the login. */
     session: LinkSession
 }
@@ -99,7 +103,9 @@ export class Link implements esr.AbiProvider {
     /** Transport used to deliver requests to the user wallet. */
     public readonly transport: LinkTransport
     /** EOSIO ChainID for which requests are valid. */
-    public readonly chainId: string | esr.ChainName
+    public readonly chainId: string
+    /** Storage adapter used to persist sessions. */
+    public readonly storage?: LinkStorage
 
     private serviceAddress: string
     private requestOptions: esr.SigningRequestEncodingOptions
@@ -120,9 +126,17 @@ export class Link implements esr.AbiProvider {
         } else {
             this.rpc = options.rpc
         }
-        this.chainId = options.chainId || defaults.chainId
+        if (options.chainId) {
+            this.chainId =
+                typeof options.chainId === 'number'
+                    ? esr.nameToId(options.chainId)
+                    : options.chainId
+        } else {
+            this.chainId = defaults.chainId
+        }
         this.serviceAddress = (options.service || defaults.service).trim().replace(/\/$/, '')
         this.transport = options.transport
+        this.storage = options.storage
         this.requestOptions = {
             abiProvider: this,
             textDecoder: options.textDecoder || new TextDecoder(),
@@ -209,7 +223,7 @@ export class Link implements esr.AbiProvider {
                 })
             })
             const payload = await Promise.race([socket, cancel])
-            const signer: esr.abi.PermissionLevel = {
+            const signer: PermissionLevel = {
                 actor: payload.sa,
                 permission: payload.sp,
             }
@@ -276,7 +290,7 @@ export class Link implements esr.AbiProvider {
      * @note This is for advanced use-cases, you probably want to use [[Link.login]] instead.
      */
     public async identify(
-        requestPermission?: esr.abi.PermissionLevel,
+        requestPermission?: PermissionLevel,
         info?: {[key: string]: string | Uint8Array}
     ): Promise<IdentifyResult> {
         const request = await this.createRequest({
@@ -377,6 +391,9 @@ export class Link implements esr.AbiProvider {
                 metadata
             )
         }
+        if (this.storage) {
+            await this.storeSession(identifier, session)
+        }
         return {
             ...res,
             session,
@@ -385,21 +402,77 @@ export class Link implements esr.AbiProvider {
 
     /**
      * Restore previous session, see [[Link.login]] to create a new session.
-     *
-     * Example:
-     *
-     * ```ts
-     * let session = await myLink.login('mycontract')
-     * let data = session.serialize()
-     * // a little longer than a few moments later...
-     * let restored = myLink.restore(data)
-     * let result = await restored.transact({action: myAction})
-     * ```
-     *
-     * @param data The serialized session data obtained by calling [[LinkSession.serialize]].
+     * @param identifier The session identifier, should be same as what was used when creating the session with [[Link.login]].
+     * @param auth A specific session auth to restore, if omitted the most recently used session will be restored.
+     * @returns A [[LinkSession]] instance or null if no session can be found.
+     * @throws If no [[LinkStorage]] adapter is configured or there was an error retrieving the session data.
      **/
-    public restoreSession(data: SerializedLinkSession) {
-        return LinkSession.restore(this, data)
+    public async restoreSession(identifier: string, auth?: PermissionLevel) {
+        if (!this.storage) {
+            throw new Error('Unable to restore session: No storage adapter configured')
+        }
+        let key: string
+        if (auth) {
+            key = this.sessionKey(identifier, formatAuth(auth))
+        } else {
+            let latestKey = await this.storage.read(this.sessionKey(identifier, 'latest'))
+            if (!latestKey) {
+                return null
+            }
+            key = latestKey
+        }
+        let data = await this.storage.read(key)
+        if (!data) {
+            return null
+        }
+        let sessionData: any
+        try {
+            sessionData = JSON.parse(data)
+        } catch (error) {
+            throw new Error(
+                `Unable to restore session: Stored JSON invalid (${error.message || String(error)})`
+            )
+        }
+        const session = LinkSession.restore(this, sessionData)
+        if (auth) {
+            // update latest used
+            await this.storage.write(this.sessionKey(identifier, 'latest'), key)
+        }
+        return session
+    }
+
+    /**
+     * List stored session auths for given identifier.
+     * The most recently used session is at the top (index 0).
+     * @throws If no [[LinkStorage]] adapter is configured or there was an error retrieving the session list.
+     **/
+    public async listSessions(identifier: string) {
+        if (!this.storage) {
+            throw new Error('Unable to list sessions: No storage adapter configured')
+        }
+        let key = this.sessionKey(identifier, 'list')
+        let list: PermissionLevel[]
+        try {
+            list = JSON.parse((await this.storage.read(key)) || '[]')
+        } catch (error) {
+            throw new Error(
+                `Unable to list sessions: Stored JSON invalid (${error.message || String(error)})`
+            )
+        }
+        return list
+    }
+
+    /**
+     * Remove stored session for given identifier and auth.
+     * @throws If no [[LinkStorage]] adapter is configured or there was an error removing the session data.
+     */
+    public async removeSession(identifier: string, auth: PermissionLevel) {
+        if (!this.storage) {
+            throw new Error('Unable to remove session: No storage adapter configured')
+        }
+        let key = this.sessionKey(identifier, formatAuth(auth))
+        await this.storage.remove(key)
+        await this.touchSession(identifier, auth, true)
     }
 
     /**
@@ -449,10 +522,38 @@ export class Link implements esr.AbiProvider {
             },
         }
     }
+
+    /** Makes sure session is in storage list of sessions and moves it to top (most recently used). */
+    private async touchSession(identifier: string, auth: PermissionLevel, remove = false) {
+        let auths = await this.listSessions(identifier)
+        let formattedAuth = formatAuth(auth)
+        let existing = auths.findIndex((a) => formatAuth(a) === formattedAuth)
+        if (existing >= 0) {
+            auths.splice(existing, 1)
+        }
+        if (remove !== false) {
+            auths.unshift(auth)
+        }
+        let key = this.sessionKey(identifier, 'list')
+        await this.storage!.write(key, JSON.stringify(auths))
+    }
+
+    /** Makes sure session is in storage list of sessions and moves it to top (most recently used). */
+    private async storeSession(identifier: string, session: LinkSession) {
+        let key = this.sessionKey(identifier, formatAuth(session.auth))
+        let data = JSON.stringify(session.serialize())
+        await this.storage!.write(key, data)
+        await this.touchSession(identifier, session.auth)
+    }
+
+    /** Session storage key for identifier and suffix. */
+    private sessionKey(identifier: string, suffix: string) {
+        return [this.chainId, identifier, suffix].join('-')
+    }
 }
 
 /**
- * Connect to a WebSocket channel wait for a message.
+ * Connect to a WebSocket channel and wait for a message.
  * @internal
  */
 function waitForCallback(url: string, ctx: {cancel?: () => void}) {
@@ -528,7 +629,7 @@ function backoff(tries: number): number {
  * Format a EOSIO permission level in the format `actor@permission` taking placeholders into consideration.
  * @internal
  */
-function formatAuth(auth: esr.abi.PermissionLevel): string {
+function formatAuth(auth: PermissionLevel): string {
     let {actor, permission} = auth
     if (actor === esr.PlaceholderName) {
         actor = '<any>'

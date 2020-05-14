@@ -334,10 +334,10 @@ eosio-abi2ts@^1.2.2:
   dependencies:
     argparse "^1.0.10"
 
-eosio-signing-request@^1.1.5:
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-1.1.5.tgz#29aa237b13801788858c08d5952a116769bf37bc"
-  integrity sha512-PSGHRgMTdiNQXqWHlZyjfH8LmKtFFnV3iH9RKJQIUpMcJAP9daZ/JzoiUVAcMbD7kbMWthg+P57FCLm01hrhug==
+eosio-signing-request@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-1.2.0.tgz#543922b4bfb60c5b07e350c5391e1599555fb0fa"
+  integrity sha512-1sINQYrj5MkLg8MEPdBPOU/opJEZVGL4xF29ph1htvb6C6kpE+CZx5tEvBBwYWL5PK4T8VRZzhi8xSQg5j7sZw==
   dependencies:
     eosjs "^20.0.0"
     fast-sha256 "^1.1.1"

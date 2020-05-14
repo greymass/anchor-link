@@ -1,5 +1,6 @@
 import {ChainName} from 'eosio-signing-request'
 import {JsonRpc} from 'eosjs'
+import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
 
 /**
@@ -25,6 +26,10 @@ export interface LinkOptions {
      * Defaults to https://cb.anchor.link.
      */
     service?: string
+    /**
+     * Optional storage adapter that will be used to persist sessions if set.
+     */
+    storage?: LinkStorage
     /**
      * Text encoder, only needed in old browsers or if used in node.js versions prior to v13.
      */
