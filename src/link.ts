@@ -392,10 +392,7 @@ export class Link implements esr.AbiProvider {
             )
         }
         if (this.storage) {
-            // save the session
             await this.storeSession(identifier, session)
-            // update latest used
-            await this.storage.write(this.sessionKey(identifier, 'latest'), this.sessionKey(identifier, formatAuth(res.signer)))
         }
         return {
             ...res,
@@ -418,11 +415,11 @@ export class Link implements esr.AbiProvider {
         if (auth) {
             key = this.sessionKey(identifier, formatAuth(auth))
         } else {
-            let latestKey = await this.storage.read(this.sessionKey(identifier, 'latest'))
-            if (!latestKey) {
+            let latest = (await this.listSessions(identifier))[0]
+            if (!latest) {
                 return null
             }
-            key = latestKey
+            key = this.sessionKey(identifier, formatAuth(latest))
         }
         let data = await this.storage.read(key)
         if (!data) {
@@ -439,7 +436,7 @@ export class Link implements esr.AbiProvider {
         const session = LinkSession.restore(this, sessionData)
         if (auth) {
             // update latest used
-            await this.storage.write(this.sessionKey(identifier, 'latest'), key)
+            await this.touchSession(identifier, auth)
         }
         return session
     }
@@ -476,6 +473,19 @@ export class Link implements esr.AbiProvider {
         let key = this.sessionKey(identifier, formatAuth(auth))
         await this.storage.remove(key)
         await this.touchSession(identifier, auth, true)
+    }
+
+    /**
+     * Remove all stored sessions for given identifier.
+     * @throws If no [[LinkStorage]] adapter is configured or there was an error removing the session data.
+     */
+    public async clearSessions(identifier: string) {
+        if (!this.storage) {
+            throw new Error('Unable to clear sessions: No storage adapter configured')
+        }
+        for (const auth of await this.listSessions(identifier)) {
+            await this.removeSession(identifier, auth)
+        }
     }
 
     /**
