@@ -2,7 +2,7 @@ import {SigningRequest} from 'eosio-signing-request'
 import {ApiInterfaces} from 'eosjs'
 
 import {SessionError} from './errors'
-import {Link, TransactArgs, TransactResult} from './link'
+import {Link, PermissionLevel, TransactArgs, TransactResult} from './link'
 import {LinkInfo} from './link-abi'
 import {LinkTransport} from './link-transport'
 import {abiEncode, sealMessage} from './utils'
@@ -14,6 +14,8 @@ import {abiEncode, sealMessage} from './utils'
 export abstract class LinkSession {
     /** The underlying link instance used by the session. */
     abstract link: Link
+    /** App identifier that owns the session. */
+    abstract identifier: string
     /** The public key the session can sign for. */
     abstract publicKey: string
     /** The EOSIO auth (a.k.a. permission level) the session can sign for. */
@@ -35,6 +37,18 @@ export abstract class LinkSession {
     abstract transact(args: TransactArgs): Promise<TransactResult>
     /** Returns a JSON-encodable object that can be used recreate the session. */
     abstract serialize(): SerializedLinkSession
+    /**
+     * Convenience, remove this session from associated [[Link]] storage if set.
+     * Equivalent to:
+     * ```ts
+     * session.link.removeSession(session.identifier, session.auth)
+     * ```
+     */
+    async remove() {
+        if (this.link.storage) {
+            await this.link.removeSession(this.identifier, this.auth)
+        }
+    }
     /** Restore a previously serialized session. */
     static restore(link: Link, data: SerializedLinkSession): LinkSession {
         switch (data.type) {
@@ -67,11 +81,10 @@ interface ChannelInfo {
 
 /** @internal */
 export interface LinkChannelSessionData {
+    /** App identifier that owns the session. */
+    identifier: string
     /** Authenticated user permission. */
-    auth: {
-        actor: string
-        permission: string
-    }
+    auth: PermissionLevel
     /** Public key of authenticated user */
     publicKey: string
     /** The wallet channel url. */
@@ -86,10 +99,8 @@ export interface LinkChannelSessionData {
  */
 export class LinkChannelSession extends LinkSession implements LinkTransport {
     readonly link: Link
-    readonly auth: {
-        actor: string
-        permission: string
-    }
+    readonly auth: PermissionLevel
+    readonly identifier: string
     readonly type = 'channel'
     readonly metadata
     readonly publicKey: string
@@ -104,6 +115,7 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         this.auth = data.auth
         this.publicKey = data.publicKey
         this.channel = data.channel
+        this.identifier = data.identifier
         this.encrypt = (request) => {
             return sealMessage(request.encode(true, false), data.requestKey, data.channel.key)
         }
@@ -190,6 +202,7 @@ export interface LinkFallbackSessionData {
         permission: string
     }
     publicKey: string
+    identifier: string
 }
 
 /**
@@ -203,6 +216,7 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
         permission: string
     }
     readonly type = 'fallback'
+    readonly identifier: string
     readonly metadata: {[key: string]: any}
     readonly publicKey: string
     serialize: () => SerializedLinkSession
@@ -213,6 +227,7 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
         this.auth = data.auth
         this.publicKey = data.publicKey
         this.metadata = metadata || {}
+        this.identifier = data.identifier
         this.serialize = () => ({
             type: this.type,
             data,

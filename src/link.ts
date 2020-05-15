@@ -372,6 +372,7 @@ export class Link implements esr.AbiProvider {
             session = new LinkChannelSession(
                 this,
                 {
+                    identifier,
                     auth: res.signer,
                     publicKey: res.signerKey,
                     channel: {
@@ -387,6 +388,7 @@ export class Link implements esr.AbiProvider {
             session = new LinkFallbackSession(
                 this,
                 {
+                    identifier,
                     auth: res.signer,
                     publicKey: res.signerKey,
                 },
