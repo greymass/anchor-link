@@ -81,7 +81,7 @@ export function publicKeyEqual(keyA: string, keyB: string) {
  * @internal
  */
 export async function generatePrivateKey() {
-    if (window && window.crypto) {
+    if (typeof window !== 'undefined' && window.crypto) {
         const data = new Uint32Array(32)
         window.crypto.getRandomValues(data)
         return ecc.PrivateKey.fromBuffer(Buffer.from(data)).toString()
