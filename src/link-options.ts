@@ -28,8 +28,10 @@ export interface LinkOptions {
     service?: string
     /**
      * Optional storage adapter that will be used to persist sessions if set.
+     * If not storage adapter is set but the given transport provides a storage, that will be used.
+     * Explicitly set this to `null` to force no storage.
      */
-    storage?: LinkStorage
+    storage?: LinkStorage | null
     /**
      * Text encoder, only needed in old browsers or if used in node.js versions prior to v13.
      */
