@@ -392,7 +392,10 @@ export class Link implements esr.AbiProvider {
             )
         }
         if (this.storage) {
+            // save the session
             await this.storeSession(identifier, session)
+            // update latest used
+            await this.storage.write(this.sessionKey(identifier, 'latest'), this.sessionKey(identifier, formatAuth(res.signer)))
         }
         return {
             ...res,
