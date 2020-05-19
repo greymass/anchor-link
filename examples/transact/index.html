@@ -15,7 +15,7 @@
             rpc: 'https://telos.greymass.com'
         })
         // the EOSIO action we want to sign and broadcast
-        const action = {
+        const actions = [{
             account: 'eosio',
             name: 'voteproducer',
             authorization: [{
@@ -27,10 +27,10 @@
                 proxy: 'coredevproxy',
                 producers: [],
             }
-        }
+        }]
         // ask the user to sign the transaction and then broadcast to chain
         function vote() {
-            link.transact({action, broadcast: true})
+            link.transact({ actions }, { broadcast: true })
                 .then((result) => {
                     document.body.innerHTML = `<h1>Thank you ${ result.signer.actor }!</h1>`
                 })

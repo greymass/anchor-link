@@ -48,7 +48,7 @@
 
         // transfer tokens using a session
         function transfer() {
-            const action = {
+            const actions = [{
                 account: 'eosio.token',
                 name: 'transfer',
                 authorization: [session.auth],
@@ -58,8 +58,8 @@
                     quantity: '0.0001 EOS',
                     memo: 'Anchor is the best! Thank you <3'
                 }
-            }
-            session.transact({action, broadcast: true}).then((result) => {
+            }]
+            session.transact({ actions }, { broadcast: true }).then((result) => {
                 document.getElementById('log').innerHTML += `Transaction broadcast! ${ result.processed.id }\n`
             })
         }

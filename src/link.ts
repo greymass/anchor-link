@@ -26,10 +26,25 @@ const fetch = makeFetch().fetch
 export type PermissionLevel = esr.abi.PermissionLevel
 
 /**
- * Arguments accepted by the [[Link.transact]] method.
+ * Arguments accepted by eosjs 2nd parameter
+ */
+
+export interface EosjsTransactArgs {
+    /** Whether the signer should broadcast the transaction */
+    broadcast?: boolean
+    /** Whether the signer should sign the transaction */
+    sign?: boolean
+    /** The number of behind to fetch for TaPoS values */
+    blocksBehind?: number
+    /** The number of seconds beyond current time to expire the transaction */
+    expireSeconds?: number
+}
+
+/**
+ * Arguments accepted by the [[Link.linkTransact]] method.
  * Note that one of `action`, `actions` or `transaction` must be set.
  */
-export interface TransactArgs {
+export interface LinkTransactArgs {
     /** Full transaction to sign. */
     transaction?: esr.abi.Transaction
     /** Action to sign. */
@@ -44,9 +59,9 @@ export interface TransactArgs {
 }
 
 /**
- * The result of a [[Link.transact]] call.
+ * The result of a [[Link.linkTransact]] call.
  */
-export interface TransactResult {
+export interface LinkTransactResult {
     /** The signing request that was sent. */
     request: esr.SigningRequest
     /** The transaction signatures. */
@@ -66,7 +81,7 @@ export interface TransactResult {
 /**
  * The result of a [[Link.identify]] call.
  */
-export interface IdentifyResult extends TransactResult {
+export interface IdentifyResult extends LinkTransactResult {
     /** The identified account. */
     account: object
     /** The public key that signed the identity proof.  */
@@ -238,7 +253,7 @@ export class Link implements esr.AbiProvider {
                 this.requestOptions
             )
             const {serializedTransaction, transaction} = resolved
-            const result: TransactResult = {
+            const result: LinkTransactResult = {
                 request: resolved.request,
                 serializedTransaction,
                 transaction,
@@ -266,18 +281,64 @@ export class Link implements esr.AbiProvider {
     }
 
     /**
+     * Sign and optionally broadcast a EOSIO transaction (matching eosjs transact)
+     *
+     * Example:
+     *
+     * ```ts
+     * let result = await myLink.transact(transaction, options)
+     * ```
+     *
+     * @param transaction The transaction.
+     * @param options The eosjs options to use for the transaction.
+     * @param transport Transport override, for internal use.
+     */
+    public async transact(
+        transaction: any,
+        {
+            broadcast = true,
+            sign = true,
+            blocksBehind,
+            expireSeconds
+        }: EosjsTransactArgs = {},
+        transport?: LinkTransport
+    ): Promise<any> {
+        // Assemble data for internal transact method
+        const tx:any = {
+            broadcast,
+            blocksBehind,
+            expireSeconds,
+        }
+        // Translate the eosjs data into the most optimized ESR payload possible
+        if (Object.keys(transaction).length === 1) {
+            // With one key being passed (actions) and one action, use an action
+            if (transaction.actions.length === 1) {
+                tx.action = transaction.actions[0]
+            } else {
+                // With one key being passed (actions) and more than one action, use an action[]
+                tx.actions = transaction.actions
+            }
+        } else {
+            // With more than just actions defined, pass the whole transaction
+            tx.transaction = transaction
+        }
+        // Call internal transact method
+        return this.linkTransact(tx, transport)
+    }
+
+    /**
      * Sign and optionally broadcast a EOSIO transaction, action or actions.
      *
      * Example:
      *
      * ```ts
-     * let result = await myLink.transact({transaction: myTx})
+     * let result = await myLink.linkTransact({transaction: myTx})
      * ```
      *
      * @param args The transact arguments.
      * @param transport Transport override, for internal use.
      */
-    public async transact(args: TransactArgs, transport?: LinkTransport): Promise<TransactResult> {
+    public async linkTransact(args: LinkTransactArgs, transport?: LinkTransport): Promise<LinkTransactResult> {
         const t = transport || this.transport
         const broadcast = args.broadcast || false
         const request = await this.createRequest(args)

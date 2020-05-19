@@ -1,6 +1,6 @@
 import {SigningRequest} from 'eosio-signing-request'
 
-import {TransactResult} from './link'
+import {LinkTransactResult} from './link'
 import {LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
 
@@ -17,7 +17,7 @@ export interface LinkTransport {
      */
     onRequest(request: SigningRequest, cancel: (reason: string | Error) => void): void
     /** Called if the request was successful. */
-    onSuccess?(request: SigningRequest, result: TransactResult): void
+    onSuccess?(request: SigningRequest, result: LinkTransactResult): void
     /** Called if the request failed. */
     onFailure?(request: SigningRequest, error: Error): void
     /**
