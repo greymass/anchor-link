@@ -1,5 +1,6 @@
 import {Numeric, Serialize} from 'eosjs'
 import * as ecc from 'eosjs-ecc'
+import makeFetch from 'fetch-ponyfill'
 
 import {Bytes, SealedMessage} from './link-abi'
 import linkAbi from './link-abi-data'
