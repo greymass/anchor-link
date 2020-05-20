@@ -9,18 +9,10 @@ import {v4 as uuid} from 'uuid'
 import {CancelError, IdentityError} from './errors'
 import {LinkCreate} from './link-abi'
 import {defaults, LinkOptions} from './link-options'
-import {
-    LinkChannelSession,
-    LinkFallbackSession,
-    LinkSession,
-    SerializedLinkSession,
-} from './link-session'
+import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
-import {abiEncode, generatePrivateKey, normalizePublicKey, publicKeyEqual} from './utils'
-
-/** @internal */
-const fetch = makeFetch().fetch
+import {abiEncode, fetch, generatePrivateKey, normalizePublicKey, publicKeyEqual} from './utils'
 
 /** EOSIO permission level with actor and signer, a.k.a. 'auth', 'authority' or 'account auth' */
 export type PermissionLevel = esr.abi.PermissionLevel

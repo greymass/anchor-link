@@ -5,6 +5,9 @@ import {Bytes, SealedMessage} from './link-abi'
 import linkAbi from './link-abi-data'
 
 /** @internal */
+export const fetch = makeFetch().fetch
+
+/** @internal */
 const types = Serialize.getTypesFromAbi(Serialize.createInitialTypes(), linkAbi)
 
 /**

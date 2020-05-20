@@ -5,7 +5,7 @@ import {SessionError} from './errors'
 import {Link, PermissionLevel, TransactArgs, TransactOptions, TransactResult} from './link'
 import {LinkInfo} from './link-abi'
 import {LinkTransport} from './link-transport'
-import {abiEncode, sealMessage} from './utils'
+import {abiEncode, fetch, sealMessage} from './utils'
 
 /**
  * Type describing a link session that can create a eosjs compatible
@@ -157,14 +157,13 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
             key: 'link',
             value: abiEncode(info, 'link_info'),
         })
-        this.link.rpc
-            .fetchBuiltin(this.channel.url, {
-                method: 'POST',
-                headers: {
-                    'X-Buoy-Wait': (this.timeout / 1000).toFixed(0),
-                },
-                body: this.encrypt(request),
-            })
+        fetch(this.channel.url, {
+            method: 'POST',
+            headers: {
+                'X-Buoy-Wait': (this.timeout / 1000).toFixed(0),
+            },
+            body: this.encrypt(request),
+        })
             .then((response) => {
                 if (response.status !== 200) {
                     cancel(new SessionError('Unable to push message', 'E_DELIVERY'))
