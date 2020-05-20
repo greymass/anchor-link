@@ -6,16 +6,19 @@ lib: $(SRC_FILES) node_modules tsconfig.json
 	./node_modules/.bin/tsc -p tsconfig.json --outDir lib
 	touch lib
 
-lib/bundle.js: $(SRC_FILES) node_modules tsconfig.json rollup.config.js
-	UNPKG_BUNDLE=1 ./node_modules/.bin/rollup -c
+lib/bundle.js: $(SRC_FILES) node_modules tsconfig.json
+	./node_modules/.bin/browserify -e src/index-bundle.js -p tsify -s AnchorLink \
+	| ./node_modules/.bin/exorcist lib/bundle.js.map > lib/bundle.js
 
-lib/index.es5.js: $(SRC_FILES) node_modules tsconfig.json rollup.config.js
-	./node_modules/.bin/rollup -c
+lib/index.es5.js: $(SRC_FILES) node_modules tsconfig.json
+	./node_modules/.bin/browserify --debug -e src/index-bundle.js -p tsify \
+		-s AnchorLink --node --no-bundle-external \
+	| ./node_modules/.bin/exorcist lib/index.es5.js.map > lib/index.es5.js
 
 .PHONY: update-abi-types
-update-abi-types: node_modules lib
-	node -p "JSON.stringify(require('./lib/link-abi-data.js').default)" \
-		| ./node_modules/.bin/eosio-abi2ts -e >src/link-abi.d.ts
+update-abi-types: node_modules
+	./node_modules/.bin/ts-node -e "import data from './src/link-abi-data'; console.log(JSON.stringify(data))" \
+	| ./node_modules/.bin/eosio-abi2ts -e >src/link-abi.d.ts.tmp && mv src/link-abi.d.ts.tmp src/link-abi.d.ts
 
 .PHONY: lint
 lint: node_modules

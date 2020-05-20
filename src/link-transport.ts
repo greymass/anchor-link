@@ -2,6 +2,7 @@ import {SigningRequest} from 'eosio-signing-request'
 
 import {TransactResult} from './link'
 import {LinkSession} from './link-session'
+import {LinkStorage} from './link-storage'
 
 /**
  * Protocol link transports need to implement.
@@ -29,4 +30,6 @@ export interface LinkTransport {
         request: SigningRequest,
         cancel: (reason: string | Error) => void
     ): void
+    /** Can be implemented if transport provides a storage as well. */
+    storage?: LinkStorage
 }

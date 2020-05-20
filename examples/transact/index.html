@@ -30,7 +30,7 @@
         }
         // ask the user to sign the transaction and then broadcast to chain
         function vote() {
-            link.transact({action, broadcast: true})
+            link.transact({action})
                 .then((result) => {
                     document.body.innerHTML = `<h1>Thank you ${ result.signer.actor }!</h1>`
                 })

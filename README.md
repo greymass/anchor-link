@@ -88,7 +88,7 @@ const action = {
         producers: [],
     }
 }
-link.transact({action, broadcast: true}).then((result) => {
+link.transact({action}).then((result) => {
     console.log(`Transaction broadcast! Transaction id: ${ result.processed.id }`)
 })
 ```
@@ -99,7 +99,7 @@ To create a persistent login session use [Link.login](https://greymass.github.io
 
 ```ts
 link.login('mydapp').then(({session}) => {
-    session.transact({action, broadcast: true}).then((result) => {
+    session.transact({action}).then((result) => {
         console.log(`Transaction broadcast! Transaction id: ${ result.processed.id }`)
     })
 })
