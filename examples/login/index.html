@@ -59,7 +59,7 @@
                     memo: 'Anchor is the best! Thank you <3'
                 }
             }
-            session.transact({action, broadcast: true}).then((result) => {
+            session.transact({action}).then((result) => {
                 document.getElementById('log').innerHTML += `Transaction broadcast! ${ result.processed.id }\n`
             })
         }

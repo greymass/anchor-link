@@ -26,7 +26,7 @@ const fetch = makeFetch().fetch
 export type PermissionLevel = esr.abi.PermissionLevel
 
 /**
- * Arguments accepted by the [[Link.transact]] method.
+ * Payload accepted by the [[Link.transact]] method.
  * Note that one of `action`, `actions` or `transaction` must be set.
  */
 export interface TransactArgs {
@@ -36,9 +36,15 @@ export interface TransactArgs {
     action?: esr.abi.Action
     /** Actions to sign. */
     actions?: esr.abi.Action[]
+}
+
+/**
+ * Options for the [[Link.transact]] method.
+ */
+export interface TransactOptions {
     /**
      * Whether to broadcast the transaction or just return the signature.
-     * Defaults to false.
+     * Defaults to true.
      */
     broadcast?: boolean
 }
@@ -94,7 +100,7 @@ export interface LoginResult extends IdentifyResult {
  *     transport: new ConsoleTransport()
  * })
  *
- * const result = await link.transact({actions: myActions, broadcast: true})
+ * const result = await link.transact({actions: myActions})
  * ```
  */
 export class Link implements esr.AbiProvider {
@@ -274,12 +280,17 @@ export class Link implements esr.AbiProvider {
      * let result = await myLink.transact({transaction: myTx})
      * ```
      *
-     * @param args The transact arguments.
+     * @param args The action, actions or transaction to use.
+     * @param options Options for this transact call.
      * @param transport Transport override, for internal use.
      */
-    public async transact(args: TransactArgs, transport?: LinkTransport): Promise<TransactResult> {
+    public async transact(
+        args: TransactArgs,
+        options?: TransactOptions,
+        transport?: LinkTransport
+    ): Promise<TransactResult> {
         const t = transport || this.transport
-        const broadcast = args.broadcast || false
+        const broadcast = options ? options.broadcast !== false : true
         const request = await this.createRequest(args)
         const result = await this.sendRequest(request, t, broadcast)
         return result

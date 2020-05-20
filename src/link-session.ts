@@ -2,7 +2,7 @@ import {SigningRequest} from 'eosio-signing-request'
 import {ApiInterfaces} from 'eosjs'
 
 import {SessionError} from './errors'
-import {Link, PermissionLevel, TransactArgs, TransactResult} from './link'
+import {Link, PermissionLevel, TransactArgs, TransactOptions, TransactResult} from './link'
 import {LinkInfo} from './link-abi'
 import {LinkTransport} from './link-transport'
 import {abiEncode, sealMessage} from './utils'
@@ -34,7 +34,7 @@ export abstract class LinkSession {
     /**
      * Transact using this session. See [[Link.transact]].
      */
-    abstract transact(args: TransactArgs): Promise<TransactResult>
+    abstract transact(args: TransactArgs, options?: TransactOptions): Promise<TransactResult>
     /** Returns a JSON-encodable object that can be used recreate the session. */
     abstract serialize(): SerializedLinkSession
     /**
@@ -190,8 +190,8 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         return this.link.makeAuthorityProvider()
     }
 
-    transact(args: TransactArgs) {
-        return this.link.transact(args, this)
+    transact(args: TransactArgs, options?: TransactOptions) {
+        return this.link.transact(args, options, this)
     }
 }
 
@@ -263,7 +263,7 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
         return this.link.makeAuthorityProvider()
     }
 
-    transact(args: TransactArgs) {
-        return this.link.transact(args, this)
+    transact(args: TransactArgs, options?: TransactOptions) {
+        return this.link.transact(args, options, this)
     }
 }
