@@ -7,7 +7,7 @@ lib: $(SRC_FILES) node_modules tsconfig.json
 	touch lib
 
 lib/bundle.js: $(SRC_FILES) node_modules tsconfig.json
-	./node_modules/.bin/browserify -e src/index-bundle.js -p tsify -s AnchorLink \
+	./node_modules/.bin/browserify --debug -e src/index-bundle.js -p tsify -s AnchorLink \
 	| ./node_modules/.bin/exorcist lib/bundle.js.map > lib/bundle.js
 
 lib/index.es5.js: $(SRC_FILES) node_modules tsconfig.json
