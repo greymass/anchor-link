@@ -209,7 +209,12 @@ export class Link implements esr.AbiProvider {
             }
             // wait for callback or user cancel
             const ctx: {cancel?: () => void} = {}
-            const socket = waitForCallback(linkUrl, ctx)
+            const socket = waitForCallback(linkUrl, ctx).then((data) => {
+                if (typeof data.rejected === 'string') {
+                    throw new CancelError(`Rejected by wallet: ${data.rejected}`)
+                }
+                return data
+            })
             const cancel = new Promise<never>((resolve, reject) => {
                 t.onRequest(request, (reason) => {
                     if (ctx.cancel) {
