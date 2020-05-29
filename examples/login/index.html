@@ -7,31 +7,29 @@
     <script src="https://unpkg.com/anchor-link"></script>
     <script src="https://unpkg.com/anchor-link-browser-transport"></script>
     <script>
+        // app identifier, should be set to the eosio contract account if applicable
+        const identifier = 'example'
         // initialize the browser transport
         const transport = new AnchorLinkBrowserTransport()
         // initialize the link
         const link = new AnchorLink({transport})
         // the session instance, either restored using link.restoreSession() or created with link.login()
-        let session 
+        let session
 
         // tries to restore session, called when document is loaded
         function restoreSession() {
-            let sessionData = localStorage.getItem('example-session')
-            if (sessionData) {
-                try {
-                    session = link.restoreSession(JSON.parse(sessionData))
+            link.restoreSession(identifier).then((result) => {
+                session = result
+                if (session) {
                     didLogin()
-                } catch (error) {
-                    console.warn('Unable to restore session', error)
                 }
-            }
+            })
         }
 
         // login and store session if sucessful
         function login() {
-            link.login('example').then((result) => {
+            link.login(identifier).then((result) => {
                 session = result.session
-                localStorage.setItem('example-session', JSON.stringify(session.serialize()))
                 didLogin()
             })
         }
@@ -39,7 +37,7 @@
         // logout and remove session from storage
         function logout() {
             document.body.classList.remove('logged-in')
-            localStorage.removeItem('example-session')
+            session.remove()
         }
 
         // called when session was restored or created
@@ -61,7 +59,7 @@
                     memo: 'Anchor is the best! Thank you <3'
                 }
             }
-            session.transact({action, broadcast: true}).then((result) => {
+            session.transact({action}).then((result) => {
                 document.getElementById('log').innerHTML += `Transaction broadcast! ${ result.processed.id }\n`
             })
         }

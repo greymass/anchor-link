@@ -88,6 +88,7 @@
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-external"><a href="linksession.html#auth" class="tsd-kind-icon">auth</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-external"><a href="linksession.html#identifier" class="tsd-kind-icon">identifier</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-external"><a href="linksession.html#link" class="tsd-kind-icon">link</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-external"><a href="linksession.html#metadata" class="tsd-kind-icon">metadata</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-external"><a href="linksession.html#publickey" class="tsd-kind-icon">public<wbr>Key</a></li>
@@ -99,6 +100,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-external"><a href="linksession.html#makeauthorityprovider" class="tsd-kind-icon">make<wbr>Authority<wbr>Provider</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-external"><a href="linksession.html#makesignatureprovider" class="tsd-kind-icon">make<wbr>Signature<wbr>Provider</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-external"><a href="linksession.html#remove" class="tsd-kind-icon">remove</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-external"><a href="linksession.html#serialize" class="tsd-kind-icon">serialize</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-external"><a href="linksession.html#transact" class="tsd-kind-icon">transact</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static tsd-is-external"><a href="linksession.html#restore" class="tsd-kind-icon">restore</a></li>
@@ -115,7 +117,7 @@
 					<div class="tsd-signature tsd-kind-icon">auth<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>actor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>permission<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L20">src/link-session.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L22">src/link-session.ts:22</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -136,12 +138,27 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-external">
+					<a name="identifier" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> identifier</h3>
+					<div class="tsd-signature tsd-kind-icon">identifier<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L18">src/link-session.ts:18</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>App identifier that owns the session.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-external">
 					<a name="link" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> link</h3>
 					<div class="tsd-signature tsd-kind-icon">link<span class="tsd-signature-symbol">:</span> <a href="link.html" class="tsd-signature-type">Link</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L16">src/link-session.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L16">src/link-session.ts:16</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -156,7 +173,7 @@
 					<div class="tsd-signature tsd-kind-icon">metadata<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L27">src/link-session.ts:27</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L29">src/link-session.ts:29</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -179,7 +196,7 @@
 					<div class="tsd-signature tsd-kind-icon">public<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L18">src/link-session.ts:18</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L20">src/link-session.ts:20</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -194,7 +211,7 @@
 					<div class="tsd-signature tsd-kind-icon">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L25">src/link-session.ts:25</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L27">src/link-session.ts:27</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -216,7 +233,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L29">src/link-session.ts:29</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L31">src/link-session.ts:31</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -238,7 +255,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L31">src/link-session.ts:31</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L33">src/link-session.ts:33</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -247,6 +264,30 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">SignatureProvider</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-external">
+					<a name="remove" class="tsd-anchor"></a>
+					<h3>remove</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-external">
+						<li class="tsd-signature tsd-kind-icon">remove<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L47">src/link-session.ts:47</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Convenience, remove this session from associated <a href="link.html">Link</a> storage if set.
+									Equivalent to:</p>
+									<pre><code class="language-ts">session.link.removeSession(session.identifier, session.auth)</code></pre>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -260,7 +301,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L37">src/link-session.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L39">src/link-session.ts:39</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -276,13 +317,13 @@
 					<a name="transact" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> transact</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-external">
-						<li class="tsd-signature tsd-kind-icon">transact<span class="tsd-signature-symbol">(</span>args<span class="tsd-signature-symbol">: </span><a href="../interfaces/transactargs.html" class="tsd-signature-type">TransactArgs</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/transactresult.html" class="tsd-signature-type">TransactResult</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">transact<span class="tsd-signature-symbol">(</span>args<span class="tsd-signature-symbol">: </span><a href="../interfaces/transactargs.html" class="tsd-signature-type">TransactArgs</a>, options<span class="tsd-signature-symbol">?: </span><a href="../interfaces/transactoptions.html" class="tsd-signature-type">TransactOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/transactresult.html" class="tsd-signature-type">TransactResult</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L35">src/link-session.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L37">src/link-session.ts:37</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -294,6 +335,9 @@
 							<ul class="tsd-parameters">
 								<li>
 									<h5>args: <a href="../interfaces/transactargs.html" class="tsd-signature-type">TransactArgs</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> options: <a href="../interfaces/transactoptions.html" class="tsd-signature-type">TransactOptions</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/transactresult.html" class="tsd-signature-type">TransactResult</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -310,7 +354,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-session.ts#L39">src/link-session.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-session.ts#L53">src/link-session.ts:53</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -355,6 +399,9 @@
 								<a href="linksession.html#auth" class="tsd-kind-icon">auth</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-external">
+								<a href="linksession.html#identifier" class="tsd-kind-icon">identifier</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-external">
 								<a href="linksession.html#link" class="tsd-kind-icon">link</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-external">
@@ -371,6 +418,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-external">
 								<a href="linksession.html#makesignatureprovider" class="tsd-kind-icon">make<wbr>Signature<wbr>Provider</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-external">
+								<a href="linksession.html#remove" class="tsd-kind-icon">remove</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-external">
 								<a href="linksession.html#serialize" class="tsd-kind-icon">serialize</a>
@@ -392,6 +442,9 @@
 						<a href="../interfaces/linkoptions.html" class="tsd-kind-icon">Link<wbr>Options</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="../interfaces/linkstorage.html" class="tsd-kind-icon">Link<wbr>Storage</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="../interfaces/linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
@@ -401,10 +454,16 @@
 						<a href="../interfaces/transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="../interfaces/transactoptions.html" class="tsd-kind-icon">Transact<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="../interfaces/transactresult.html" class="tsd-kind-icon">Transact<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-is-external">
 						<a href="../index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="../index.html#permissionlevel" class="tsd-kind-icon">Permission<wbr>Level</a>
 					</li>
 				</ul>
 			</nav>

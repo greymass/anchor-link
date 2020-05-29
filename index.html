@@ -77,9 +77,11 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/identifyresult.html" class="tsd-kind-icon">Identify<wbr>Result</a></li>
 								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/linkoptions.html" class="tsd-kind-icon">Link<wbr>Options</a></li>
+								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/linkstorage.html" class="tsd-kind-icon">Link<wbr>Storage</a></li>
 								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a></li>
 								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/loginresult.html" class="tsd-kind-icon">Login<wbr>Result</a></li>
 								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a></li>
+								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/transactoptions.html" class="tsd-kind-icon">Transact<wbr>Options</a></li>
 								<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/transactresult.html" class="tsd-kind-icon">Transact<wbr>Result</a></li>
 							</ul>
 						</section>
@@ -87,6 +89,7 @@
 							<h3>Type aliases</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-type-alias tsd-is-external"><a href="index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a></li>
+								<li class="tsd-kind-type-alias tsd-is-external"><a href="index.html#permissionlevel" class="tsd-kind-icon">Permission<wbr>Level</a></li>
 							</ul>
 						</section>
 					</div>
@@ -100,7 +103,7 @@
 					<div class="tsd-signature tsd-kind-icon">Link<wbr>Error<wbr>Code<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"E_DELIVERY"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"E_TIMEOUT"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"E_CANCEL"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"E_IDENTITY"</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/errors.ts#L8">src/errors.ts:8</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/errors.ts#L8">src/errors.ts:8</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -112,6 +115,21 @@
 								<li><code>E_CANCEL</code>: The <a href="interfaces/linktransport.html">LinkTransport</a> canceled the request.</li>
 								<li><code>E_IDENTITY</code>: Identity proof failed to verify.</li>
 							</ul>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-is-external">
+					<a name="permissionlevel" class="tsd-anchor"></a>
+					<h3>Permission<wbr>Level</h3>
+					<div class="tsd-signature tsd-kind-icon">Permission<wbr>Level<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PermissionLevel</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link.ts#L18">src/link.ts:18</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>EOSIO permission level with actor and signer, a.k.a. &#39;auth&#39;, &#39;authority&#39; or &#39;account auth&#39;</p>
 						</div>
 					</div>
 				</section>
@@ -140,6 +158,9 @@
 						<a href="interfaces/linkoptions.html" class="tsd-kind-icon">Link<wbr>Options</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/linkstorage.html" class="tsd-kind-icon">Link<wbr>Storage</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="interfaces/linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
@@ -149,10 +170,16 @@
 						<a href="interfaces/transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/transactoptions.html" class="tsd-kind-icon">Transact<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="interfaces/transactresult.html" class="tsd-kind-icon">Transact<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-is-external">
 						<a href="index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="index.html#permissionlevel" class="tsd-kind-icon">Permission<wbr>Level</a>
 					</li>
 				</ul>
 			</nav>

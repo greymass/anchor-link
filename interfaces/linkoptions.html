@@ -89,6 +89,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="linkoptions.html#chainid" class="tsd-kind-icon">chain<wbr>Id</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="linkoptions.html#rpc" class="tsd-kind-icon">rpc</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="linkoptions.html#service" class="tsd-kind-icon">service</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="linkoptions.html#storage" class="tsd-kind-icon">storage</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="linkoptions.html#textdecoder" class="tsd-kind-icon">text<wbr>Decoder</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="linkoptions.html#textencoder" class="tsd-kind-icon">text<wbr>Encoder</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-external"><a href="linkoptions.html#transport" class="tsd-kind-icon">transport</a></li>
@@ -105,7 +106,7 @@
 					<div class="tsd-signature tsd-kind-icon">chain<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ChainName</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-options.ts#L17">src/link-options.ts:17</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-options.ts#L18">src/link-options.ts:18</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -121,7 +122,7 @@
 					<div class="tsd-signature tsd-kind-icon">rpc<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">JsonRpc</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-options.ts#L22">src/link-options.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-options.ts#L23">src/link-options.ts:23</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -137,7 +138,7 @@
 					<div class="tsd-signature tsd-kind-icon">service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-options.ts#L27">src/link-options.ts:27</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-options.ts#L28">src/link-options.ts:28</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -148,12 +149,29 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+					<a name="storage" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> storage</h3>
+					<div class="tsd-signature tsd-kind-icon">storage<span class="tsd-signature-symbol">:</span> <a href="linkstorage.html" class="tsd-signature-type">LinkStorage</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-options.ts#L34">src/link-options.ts:34</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Optional storage adapter that will be used to persist sessions if set.
+								If not storage adapter is set but the given transport provides a storage, that will be used.
+							Explicitly set this to <code>null</code> to force no storage.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-external">
 					<a name="textdecoder" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagOptional">Optional</span> text<wbr>Decoder</h3>
 					<div class="tsd-signature tsd-kind-icon">text<wbr>Decoder<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TextDecoder</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-options.ts#L35">src/link-options.ts:35</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-options.ts#L42">src/link-options.ts:42</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -168,7 +186,7 @@
 					<div class="tsd-signature tsd-kind-icon">text<wbr>Encoder<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">TextEncoder</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-options.ts#L31">src/link-options.ts:31</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-options.ts#L38">src/link-options.ts:38</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -183,7 +201,7 @@
 					<div class="tsd-signature tsd-kind-icon">transport<span class="tsd-signature-symbol">:</span> <a href="linktransport.html" class="tsd-signature-type">LinkTransport</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/825cb77/src/link-options.ts#L12">src/link-options.ts:12</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4a2e19f/src/link-options.ts#L13">src/link-options.ts:13</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -228,6 +246,9 @@
 								<a href="linkoptions.html#service" class="tsd-kind-icon">service</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
+								<a href="linkoptions.html#storage" class="tsd-kind-icon">storage</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
 								<a href="linkoptions.html#textdecoder" class="tsd-kind-icon">text<wbr>Decoder</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-external">
@@ -241,6 +262,9 @@
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="linkstorage.html" class="tsd-kind-icon">Link<wbr>Storage</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
@@ -250,10 +274,16 @@
 						<a href="transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="transactoptions.html" class="tsd-kind-icon">Transact<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
 						<a href="transactresult.html" class="tsd-kind-icon">Transact<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-is-external">
 						<a href="../index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="../index.html#permissionlevel" class="tsd-kind-icon">Permission<wbr>Level</a>
 					</li>
 				</ul>
 			</nav>
