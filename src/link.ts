@@ -8,6 +8,7 @@ import {v4 as uuid} from 'uuid'
 
 import {CancelError, IdentityError} from './errors'
 import {LinkCreate} from './link-abi'
+import {LinkCosigner} from './link-cosigner'
 import {defaults, LinkOptions} from './link-options'
 import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
@@ -102,6 +103,8 @@ export class Link implements esr.AbiProvider {
     public readonly transport: LinkTransport
     /** EOSIO ChainID for which requests are valid. */
     public readonly chainId: string
+    /** Cosigner to use with requests */
+    public readonly cosigner?: LinkCosigner
     /** Storage adapter used to persist sessions. */
     public readonly storage?: LinkStorage
 
@@ -131,6 +134,9 @@ export class Link implements esr.AbiProvider {
                     : options.chainId
         } else {
             this.chainId = defaults.chainId
+        }
+        if (options.cosigner) {
+            this.cosigner = options.cosigner
         }
         this.serviceAddress = (options.service || defaults.service).trim().replace(/\/$/, '')
         this.transport = options.transport
@@ -172,8 +178,12 @@ export class Link implements esr.AbiProvider {
      * Create a SigningRequest instance configured for this link.
      * @internal
      */
-    public async createRequest(args: esr.SigningRequestCreateArguments) {
+    public async createRequest(esrargs: esr.SigningRequestCreateArguments) {
         // generate unique callback url
+        let args = esrargs
+        if (this.cosigner) {
+            args = this.prependCosigner(args, this.cosigner)
+        }
         const request = await esr.SigningRequest.create(
             {
                 ...args,
@@ -187,6 +197,43 @@ export class Link implements esr.AbiProvider {
             this.requestOptions
         )
         return request
+    }
+
+    public prependCosigner(args, cosigner: LinkCosigner) {
+        const action = {
+            account: cosigner.contract,
+            name: cosigner.method,
+            authorization: [{ actor: cosigner.account, permission: cosigner.permission }],
+            data: {}
+        }
+        if (args.action) {
+            return {
+                actions: [
+                    action,
+                    args,
+                ]
+            }
+        }
+        if (args.actions) {
+            return {
+                actions: [
+                    action,
+                    ...args.actions,
+                ]
+            }
+        }
+        if (args.transaction) {
+            return {
+                transaction: {
+                    actions: [
+                        action,
+                        ...args.transaction.actions,
+                    ],
+                    ...args.transaction,
+                }
+            }
+        }
+        return args
     }
 
     /**
@@ -245,8 +292,27 @@ export class Link implements esr.AbiProvider {
                 signer,
             }
             if (broadcast) {
+                let signatures = result.signatures
+                if (this.cosigner) {
+                    const cosigned = await fetch(this.cosigner.url, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            signatures,
+                            compression: 0,
+                            packed_context_free_data: '',
+                            packed_trx: arrayToHex(result.serializedTransaction),
+                        })
+                    })
+                    const json = await cosigned.json()
+                    if (cosigned) {
+                        signatures = json.data.signatures
+                    }
+                }
                 const res = await this.rpc.push_transaction({
-                    signatures: result.signatures,
+                    signatures,
                     serializedTransaction: result.serializedTransaction,
                 })
                 result.processed = res.processed
@@ -658,4 +724,16 @@ function formatAuth(auth: PermissionLevel): string {
         permission = '<any>'
     }
     return `${actor}@${permission}`
+}
+
+/**
+ * Convert transaction array to hex
+ * @internal
+ */
+function arrayToHex(data: Uint8Array) {
+    let result = '';
+    for (const x of data) {
+        result += ('00' + x.toString(16)).slice(-2);
+    }
+    return result;
 }

@@ -1,5 +1,6 @@
 import {ChainName} from 'eosio-signing-request'
 import {JsonRpc} from 'eosjs'
+import {LinkCosigner} from './link-cosigner'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
 
@@ -11,6 +12,10 @@ export interface LinkOptions {
      * Link transport responsible for presenting signing requests to user, required.
      */
     transport: LinkTransport
+    /**
+     * Cosigner of transaction to be used with ONLY_BILL_FIRST_AUTHORIZER
+     */
+    cosigner: LinkCosigner
     /**
      * ChainID or esr chain name alias for which the link is valid.
      * Defaults to EOS (aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906).
