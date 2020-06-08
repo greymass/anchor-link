@@ -174,6 +174,23 @@ export class Link implements esr.AbiProvider {
         return `${this.serviceAddress}/${uuid()}`
     }
 
+    public getFirstSigner(args: esr.SigningRequestCreateArguments): PermissionLevel {
+        try {
+            if (args.action) {
+                return args.action.authorization[0]
+            }
+            if (args.actions) {
+                return args.actions[0].authorization[0]
+            }
+            if (args.transaction) {
+                return args.transaction.actions[0].authorization[0]
+            }
+        } catch(e) {
+            throw new Error(`Request error while processing authorization: ${e.message}`)
+        }
+        throw new Error('Request does not contain authorization')
+    }
+
     /**
      * Create a SigningRequest instance configured for this link.
      * @internal
@@ -181,8 +198,22 @@ export class Link implements esr.AbiProvider {
     public async createRequest(esrargs: esr.SigningRequestCreateArguments) {
         // generate unique callback url
         let args = esrargs
-        if (this.cosigner) {
-            args = this.prependCosigner(args, this.cosigner)
+        // if a cosigner configuration exists, determine if it should cover resource costs
+        if (this.cosigner && !args.identity) {
+            let { always } = this.cosigner;
+            if (always) {
+                args = this.prependCosigner(args, this.cosigner)
+            } else {
+                // load the current signer and inspect current resources
+                const signer = this.getFirstSigner(args)
+                const account = await this.rpc.get_account(signer.actor)
+                const { available, max } = account.cpu_limit
+                // if the user has less CPU than the threshold (5ms default), cosign
+                const threshold = this.cosigner.threshold || 5000
+                if (available < 5000) {
+                    args = this.prependCosigner(args, this.cosigner)
+                }
+            }
         }
         const request = await esr.SigningRequest.create(
             {
