@@ -324,7 +324,7 @@ export class Link implements esr.AbiProvider {
             }
             if (broadcast) {
                 let signatures = result.signatures
-                if (this.cosigner) {
+                if (this.cosigner && this.cosigner.url) {
                     const cosigned = await fetch(this.cosigner.url, {
                         method: 'POST',
                         headers: {
