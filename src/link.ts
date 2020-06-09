@@ -181,6 +181,17 @@ export class Link implements esr.AbiProvider {
     public async createRequest(srcargs: esr.SigningRequestCreateArguments) {
         // create a copy of the request arguments for potential modification
         let args: esr.SigningRequestCreateArguments = Object.assign({}, srcargs)
+        // determine if this is a transaction eosjs would have expected
+        const hasTapos = ['expiration', 'ref_block_num', 'ref_block_prefix'].every(v => Object.keys(args).includes(v));
+        if (args.actions && hasTapos && !args.transaction) {
+            // embed the transaction into the args
+            args = {
+                transaction: {
+                    ...args,
+                    actions: args.actions,
+                }
+            }
+        }
         // if a cosigner configuration exists, attempt to modify for cosigning
         if (this.cosigner && !args.identity) {
             args = await this.attemptCosign(args, this.cosigner)
