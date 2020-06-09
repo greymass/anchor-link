@@ -346,28 +346,37 @@ export class Link implements esr.AbiProvider {
                 payload,
                 signer,
             }
-            if (broadcast) {
-                let signatures = result.signatures
-                if (this.cosigner && this.cosigner.url) {
-                    const cosigned = await fetch(this.cosigner.url, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            signatures,
-                            compression: 0,
-                            packed_context_free_data: '',
-                            packed_trx: arrayToHex(result.serializedTransaction),
-                        })
+            const { actor, permission } = this.getFirstAuthorizer({ transaction: transaction })
+            const cosigned = (
+                this.cosigner
+                && this.cosigner.url
+                && actor === this.cosigner.account
+                && permission === this.cosigner.permission
+            )
+            if (cosigned) {
+                const cosigned = await fetch(this.cosigner.url, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        signatures,
+                        compression: 0,
+                        packed_context_free_data: '',
+                        packed_trx: arrayToHex(result.serializedTransaction),
                     })
-                    const json = await cosigned.json()
-                    if (cosigned) {
-                        signatures = json.data.signatures
-                    }
+                })
+                const json = await cosigned.json()
+                if (cosigned && cosigned.status === 200) {
+                    result.signatures = json.data.signatures
                 }
+                if (cosigned && cosigned.status !== 200) {
+                    throw new Error(JSON.stringify(json.error))
+                }
+            }
+            if (broadcast) {
                 const res = await this.rpc.push_transaction({
-                    signatures,
+                    signatures: result.signatures,
                     serializedTransaction: result.serializedTransaction,
                 })
                 result.processed = res.processed
