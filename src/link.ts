@@ -174,46 +174,16 @@ export class Link implements esr.AbiProvider {
         return `${this.serviceAddress}/${uuid()}`
     }
 
-    public getFirstSigner(args: esr.SigningRequestCreateArguments): PermissionLevel {
-        try {
-            if (args.action) {
-                return args.action.authorization[0]
-            }
-            if (args.actions) {
-                return args.actions[0].authorization[0]
-            }
-            if (args.transaction) {
-                return args.transaction.actions[0].authorization[0]
-            }
-        } catch(e) {
-            throw new Error(`Request error while processing authorization: ${e.message}`)
-        }
-        throw new Error('Request does not contain authorization')
-    }
-
     /**
      * Create a SigningRequest instance configured for this link.
      * @internal
      */
-    public async createRequest(esrargs: esr.SigningRequestCreateArguments) {
-        // generate unique callback url
-        let args = esrargs
-        // if a cosigner configuration exists, determine if it should cover resource costs
+    public async createRequest(srcargs: esr.SigningRequestCreateArguments) {
+        // create a copy of the request arguments for potential modification
+        let args: esr.SigningRequestCreateArguments = Object.assign({}, srcargs)
+        // if a cosigner configuration exists, attempt to modify for cosigning
         if (this.cosigner && !args.identity) {
-            let { always } = this.cosigner;
-            if (always) {
-                args = this.prependCosigner(args, this.cosigner)
-            } else {
-                // load the current signer and inspect current resources
-                const signer = this.getFirstSigner(args)
-                const account = await this.rpc.get_account(signer.actor)
-                const { available, max } = account.cpu_limit
-                // if the user has less CPU than the threshold (5ms default), cosign
-                const threshold = this.cosigner.threshold || 5000
-                if (available < 5000) {
-                    args = this.prependCosigner(args, this.cosigner)
-                }
-            }
+            args = await this.attemptCosign(args, this.cosigner)
         }
         const request = await esr.SigningRequest.create(
             {
@@ -230,7 +200,50 @@ export class Link implements esr.AbiProvider {
         return request
     }
 
-    public prependCosigner(args, cosigner: LinkCosigner) {
+    public async attemptCosign(
+        srcargs: esr.SigningRequestCreateArguments,
+        cosigner: LinkCosigner,
+    ): Promise<esr.SigningRequestCreateArguments> {
+        const { always, threshold } = cosigner;
+        let args = Object.assign({}, srcargs)
+        if (always) {
+            args = this.prependCosigner(args, cosigner)
+        } else {
+            // load the current signer and inspect current resources
+            const signer = this.getFirstAuthorizer(args)
+            const account = await this.rpc.get_account(signer.actor)
+            const { available, max } = account.cpu_limit
+            // if the user has less CPU than the threshold (5ms default), cosign
+            if ((threshold && available < threshold) || available < 5000) {
+                args = this.prependCosigner(args, cosigner)
+            }
+        }
+        return args
+    }
+
+    public getFirstAuthorizer(
+        args: esr.SigningRequestCreateArguments
+    ): PermissionLevel {
+        try {
+            if (args.action) {
+                return args.action.authorization[0]
+            }
+            if (args.actions) {
+                return args.actions[0].authorization[0]
+            }
+            if (args.transaction) {
+                return args.transaction.actions[0].authorization[0]
+            }
+        } catch(e) {
+            throw new Error(`Request error while processing authorization: ${e.message}`)
+        }
+        throw new Error('Request does not contain authorization')
+    }
+
+    public prependCosigner(
+        args: esr.SigningRequestCreateArguments,
+        cosigner: LinkCosigner
+    ): esr.SigningRequestCreateArguments {
         const action = {
             account: cosigner.contract,
             name: cosigner.method,
@@ -241,7 +254,7 @@ export class Link implements esr.AbiProvider {
             return {
                 actions: [
                     action,
-                    args,
+                    args.action,
                 ]
             }
         }
@@ -256,11 +269,11 @@ export class Link implements esr.AbiProvider {
         if (args.transaction) {
             return {
                 transaction: {
+                    ...args.transaction,
                     actions: [
                         action,
                         ...args.transaction.actions,
                     ],
-                    ...args.transaction,
                 }
             }
         }
