@@ -349,11 +349,10 @@ export class Link implements esr.AbiProvider {
             const { actor, permission } = this.getFirstAuthorizer({ transaction: transaction })
             const cosigned = (
                 this.cosigner
-                && this.cosigner.url
                 && actor === this.cosigner.account
                 && permission === this.cosigner.permission
             )
-            if (cosigned) {
+            if (cosigned && this.cosigner && this.cosigner.url) {
                 const cosigned = await fetch(this.cosigner.url, {
                     method: 'POST',
                     headers: {
