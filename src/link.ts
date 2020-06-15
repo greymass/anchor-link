@@ -8,12 +8,20 @@ import {v4 as uuid} from 'uuid'
 
 import {CancelError, IdentityError} from './errors'
 import {LinkCreate} from './link-abi'
-import {attemptCosign, prependCosigner, LinkCosigner} from './link-cosigner'
+import {attemptCosign, LinkCosigner, prependCosigner} from './link-cosigner'
 import {defaults, LinkOptions} from './link-options'
 import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
-import {abiEncode, createTapos, fetch, generatePrivateKey, getFirstAuthorizer, normalizePublicKey, publicKeyEqual} from './utils'
+import {
+    abiEncode,
+    createTapos,
+    fetch,
+    generatePrivateKey,
+    getFirstAuthorizer,
+    normalizePublicKey,
+    publicKeyEqual,
+} from './utils'
 
 /** EOSIO permission level with actor and signer, a.k.a. 'auth', 'authority' or 'account auth' */
 export type PermissionLevel = esr.abi.PermissionLevel
@@ -198,10 +206,7 @@ export class Link implements esr.AbiProvider {
     /**
      * Get payload from completed callback or user cancelling
      */
-    private async getPayload(
-        request: esr.SigningRequest,
-        transport: LinkTransport,
-    ) {
+    private async getPayload(request: esr.SigningRequest, transport: LinkTransport) {
         const ctx: {cancel?: () => void} = {}
         const socket = waitForCallback(request.data.callback, ctx)
         const cancel = new Promise<never>((resolve, reject) => {
@@ -220,9 +225,7 @@ export class Link implements esr.AbiProvider {
         return payload
     }
 
-    private validateRequest(
-        request: esr.SigningRequest
-    ) {
+    private validateRequest(request: esr.SigningRequest) {
         const linkUrl = request.data.callback
         if (!linkUrl.startsWith(this.serviceAddress)) {
             throw new Error('Request must have a link callback')
@@ -238,30 +241,27 @@ export class Link implements esr.AbiProvider {
             .map((key) => payload[key]!)
     }
 
-    private async preflight(
-        resolved
-    ) {
+    private async preflight(resolved) {
         // signatures collected during preflight
         let signatures: string[] = []
         // check that this request should submit the cosigning preflight action
-        const { actor, permission } = getFirstAuthorizer(resolved.transaction)
-        const cosigned = (
-            this.cosigner
-            && actor === this.cosigner.account
-            && permission === this.cosigner.permission
-        )
+        const {actor, permission} = getFirstAuthorizer(resolved.transaction)
+        const cosigned =
+            this.cosigner &&
+            actor === this.cosigner.account &&
+            permission === this.cosigner.permission
         if (cosigned && this.cosigner && this.cosigner.url) {
             const cosigned = await fetch(this.cosigner.url, {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     signatures: [],
                     compression: 0,
                     packed_context_free_data: '',
                     packed_trx: arrayToHex(resolved.serializedTransaction),
-                })
+                }),
             })
             const json = await cosigned.json()
             if (cosigned && cosigned.status === 200) {
@@ -272,7 +272,7 @@ export class Link implements esr.AbiProvider {
             }
         }
         return {
-            signatures
+            signatures,
         }
     }
 
@@ -302,7 +302,7 @@ export class Link implements esr.AbiProvider {
                 resolved = request.resolve(abis, signer, tapos)
                 // mutate request type to a transaction
                 request = await this.createRequest({
-                    transaction: resolved.transaction
+                    transaction: resolved.transaction,
                 })
                 // perform preflight operations on resolved request
                 const preflight = await this.preflight(resolved)
@@ -375,14 +375,16 @@ export class Link implements esr.AbiProvider {
         const t = transport || this.transport
         const broadcast = options ? options.broadcast !== false : true
         // determine if this is a transaction eosjs would have expected
-        const hasTapos = ['expiration', 'ref_block_num', 'ref_block_prefix'].every(v => Object.keys(args).includes(v));
+        const hasTapos = ['expiration', 'ref_block_num', 'ref_block_prefix'].every((v) =>
+            Object.keys(args).includes(v)
+        )
         if (args.actions && hasTapos && !args.transaction) {
             // embed the args within a transaction request type
             const transaction: esr.abi.Transaction = {
                 ...args,
                 actions: args.actions,
             }
-            args = { transaction }
+            args = {transaction}
         }
         // if a cosigner configuration exists, attempt to modify and cosign
         if (this.cosigner) {
@@ -781,9 +783,9 @@ function formatAuth(auth: PermissionLevel): string {
  * @internal
  */
 function arrayToHex(data: Uint8Array) {
-    let result = '';
+    let result = ''
     for (const x of data) {
-        result += ('00' + x.toString(16)).slice(-2);
+        result += ('00' + x.toString(16)).slice(-2)
     }
-    return result;
+    return result
 }
