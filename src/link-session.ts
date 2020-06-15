@@ -181,6 +181,13 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
             })
     }
 
+    prepare(request) {
+        if (this.link.transport.prepare) {
+            return this.link.transport.prepare(request, this)
+        }
+        return Promise.resolve(request)
+    }
+
     public makeSignatureProvider(): ApiInterfaces.SignatureProvider {
         return this.link.makeSignatureProvider([this.publicKey], this)
     }

@@ -172,9 +172,9 @@ export class Link implements esr.AbiProvider {
      * Create a SigningRequest instance configured for this link.
      * @internal
      */
-    public async createRequest(args: esr.SigningRequestCreateArguments) {
+    public async createRequest(args: esr.SigningRequestCreateArguments, transport?: LinkTransport) {
         // generate unique callback url
-        const request = await esr.SigningRequest.create(
+        let request = await esr.SigningRequest.create(
             {
                 ...args,
                 chainId: this.chainId,
@@ -186,6 +186,10 @@ export class Link implements esr.AbiProvider {
             },
             this.requestOptions
         )
+        const t = transport || this.transport
+        if (t.prepare) {
+            request = await t.prepare(request)
+        }
         return request
     }
 
@@ -283,6 +287,29 @@ export class Link implements esr.AbiProvider {
     ): Promise<TransactResult> {
         const t = transport || this.transport
         const broadcast = options ? options.broadcast !== false : true
+        // eosjs transact compat: upgrade to transaction if args have any header fields
+        let anyArgs = args as any
+        if (
+            args.actions &&
+            (anyArgs.expiration ||
+                anyArgs.ref_block_num ||
+                anyArgs.ref_block_prefix ||
+                anyArgs.max_net_usage_words ||
+                anyArgs.max_cpu_usage_ms ||
+                anyArgs.delay_sec)
+        ) {
+            args = {
+                transaction: {
+                    expiration: '1970-01-01T00:00:00',
+                    ref_block_num: 0,
+                    ref_block_prefix: 0,
+                    max_net_usage_words: 0,
+                    max_cpu_usage_ms: 0,
+                    delay_sec: 0,
+                    ...anyArgs,
+                },
+            }
+        }
         const request = await this.createRequest(args)
         const result = await this.sendRequest(request, t, broadcast)
         return result
