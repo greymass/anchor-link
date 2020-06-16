@@ -32,4 +32,6 @@ export interface LinkTransport {
     ): void
     /** Can be implemented if transport provides a storage as well. */
     storage?: LinkStorage
+    /** Can be implemented to modify request just after it has been created. */
+    prepare?(request: SigningRequest, session?: LinkSession): Promise<SigningRequest>
 }

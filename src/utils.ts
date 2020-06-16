@@ -1,9 +1,7 @@
-import * as esr from 'eosio-signing-request'
-import {JsonRpc, Numeric, Serialize} from 'eosjs'
+import {Numeric, Serialize} from 'eosjs'
 import * as ecc from 'eosjs-ecc'
 import makeFetch from 'fetch-ponyfill'
 
-import {PermissionLevel} from './link'
 import {Bytes, SealedMessage} from './link-abi'
 import linkAbi from './link-abi-data'
 
@@ -94,55 +92,4 @@ export async function generatePrivateKey() {
     } else {
         return await ecc.randomKey()
     }
-}
-
-/**
- * Retreives the first authorizer of the first action
- * @internal
- */
-export function getFirstAuthorizer(args: esr.SigningRequestCreateArguments): PermissionLevel {
-    try {
-        if (args.action) {
-            return args.action.authorization[0]
-        }
-        if (args.actions) {
-            return args.actions[0].authorization[0]
-        }
-        if (args.transaction) {
-            return args.transaction.actions[0].authorization[0]
-        }
-    } catch (e) {
-        throw new Error(`Request error while processing authorization: ${e.message}`)
-    }
-    throw new Error('Request does not contain authorization')
-}
-
-/**
- * Creates TAPOS Values based on current blockchain state
- * @internal
- */
-export async function createTapos(rpc: JsonRpc, expireInSeconds: number = 120) {
-    const info = await rpc.get_info()
-    return {
-        ref_block_num: info.last_irreversible_block_num & 0xffff,
-        ref_block_prefix: getBlockPrefix(info.last_irreversible_block_id),
-        expiration: getExpiration(expireInSeconds),
-    }
-}
-export function reverseNibbles(hex) {
-    const rv: any = []
-    for (let i = hex.length - 1; i > 0; i -= 2) {
-        rv.push(hex[i - 1] + hex[i])
-    }
-    return rv.join('')
-}
-export function getBlockPrefix(blockIdHex) {
-    const hex = reverseNibbles(blockIdHex.substring(16, 24))
-    return parseInt(hex, 16)
-}
-export function getExpiration(expireInSeconds: number = 120): string {
-    const currentDate = new Date()
-    const timePlus = currentDate.getTime() + expireInSeconds * 1000
-    const timeInISOString = new Date(timePlus).toISOString()
-    return timeInISOString.substr(0, timeInISOString.length - 1)
 }

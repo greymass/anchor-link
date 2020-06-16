@@ -8,20 +8,11 @@ import {v4 as uuid} from 'uuid'
 
 import {CancelError, IdentityError} from './errors'
 import {LinkCreate} from './link-abi'
-import {attemptCosign, LinkCosigner, prependCosigner} from './link-cosigner'
 import {defaults, LinkOptions} from './link-options'
 import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
-import {
-    abiEncode,
-    createTapos,
-    fetch,
-    generatePrivateKey,
-    getFirstAuthorizer,
-    normalizePublicKey,
-    publicKeyEqual,
-} from './utils'
+import {abiEncode, fetch, generatePrivateKey, normalizePublicKey, publicKeyEqual} from './utils'
 
 /** EOSIO permission level with actor and signer, a.k.a. 'auth', 'authority' or 'account auth' */
 export type PermissionLevel = esr.abi.PermissionLevel
@@ -111,14 +102,13 @@ export class Link implements esr.AbiProvider {
     public readonly transport: LinkTransport
     /** EOSIO ChainID for which requests are valid. */
     public readonly chainId: string
-    /** Cosigner to use with requests */
-    public readonly cosigner?: LinkCosigner
     /** Storage adapter used to persist sessions. */
     public readonly storage?: LinkStorage
 
     private serviceAddress: string
     private requestOptions: esr.SigningRequestEncodingOptions
     private abiCache = new Map<string, any>()
+    private pendingAbis = new Map<string, Promise<any>>()
 
     /** Create a new link instance. */
     constructor(options: LinkOptions) {
@@ -143,9 +133,6 @@ export class Link implements esr.AbiProvider {
         } else {
             this.chainId = defaults.chainId
         }
-        if (options.cosigner) {
-            this.cosigner = options.cosigner
-        }
         this.serviceAddress = (options.service || defaults.service).trim().replace(/\/$/, '')
         this.transport = options.transport
         if (options.storage !== null) {
@@ -166,7 +153,13 @@ export class Link implements esr.AbiProvider {
     public async getAbi(account: string) {
         let rv = this.abiCache.get(account)
         if (!rv) {
-            rv = (await this.rpc.get_abi(account)).abi
+            let getAbi = this.pendingAbis.get(account)
+            if (!getAbi) {
+                getAbi = this.rpc.get_abi(account)
+                this.pendingAbis.set(account, getAbi)
+            }
+            rv = (await getAbi).abi
+            this.pendingAbis.delete(account)
             if (rv) {
                 this.abiCache.set(account, rv)
             }
@@ -186,10 +179,9 @@ export class Link implements esr.AbiProvider {
      * Create a SigningRequest instance configured for this link.
      * @internal
      */
-    public async createRequest(
-        args: esr.SigningRequestCreateArguments
-    ): Promise<esr.SigningRequest> {
-        const request = await esr.SigningRequest.create(
+    public async createRequest(args: esr.SigningRequestCreateArguments, transport?: LinkTransport) {
+        // generate unique callback url
+        let request = await esr.SigningRequest.create(
             {
                 ...args,
                 chainId: this.chainId,
@@ -201,79 +193,11 @@ export class Link implements esr.AbiProvider {
             },
             this.requestOptions
         )
+        const t = transport || this.transport
+        if (t.prepare) {
+            request = await t.prepare(request)
+        }
         return request
-    }
-    /**
-     * Get payload from completed callback or user cancelling
-     */
-    private async getPayload(request: esr.SigningRequest, transport: LinkTransport) {
-        const ctx: {cancel?: () => void} = {}
-        const socket = waitForCallback(request.data.callback, ctx)
-        const cancel = new Promise<never>((resolve, reject) => {
-            transport.onRequest(request, (reason) => {
-                if (ctx.cancel) {
-                    ctx.cancel()
-                }
-                if (typeof reason === 'string') {
-                    reject(new CancelError(reason))
-                } else {
-                    reject(reason)
-                }
-            })
-        })
-        const payload = await Promise.race([socket, cancel])
-        return payload
-    }
-
-    private validateRequest(request: esr.SigningRequest) {
-        const linkUrl = request.data.callback
-        if (!linkUrl.startsWith(this.serviceAddress)) {
-            throw new Error('Request must have a link callback')
-        }
-        if (request.data.flags !== 2) {
-            throw new Error('Invalid request flags')
-        }
-    }
-
-    private getPayloadSignatures(payload): string[] {
-        return Object.keys(payload)
-            .filter((key) => key.startsWith('sig') && key !== 'sig0')
-            .map((key) => payload[key]!)
-    }
-
-    private async preflight(resolved) {
-        // signatures collected during preflight
-        let signatures: string[] = []
-        // check that this request should submit the cosigning preflight action
-        const {actor, permission} = getFirstAuthorizer(resolved.transaction)
-        const cosigned =
-            this.cosigner &&
-            actor === this.cosigner.account &&
-            permission === this.cosigner.permission
-        if (cosigned && this.cosigner && this.cosigner.url) {
-            const cosigned = await fetch(this.cosigner.url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    signatures: [],
-                    compression: 0,
-                    packed_context_free_data: '',
-                    packed_trx: arrayToHex(resolved.serializedTransaction),
-                }),
-            })
-            const json = await cosigned.json()
-            if (cosigned && cosigned.status === 200) {
-                signatures = json.data.signatures
-            }
-            if (cosigned && cosigned.status !== 200) {
-                throw new Error(JSON.stringify(json.error))
-            }
-        }
-        return {
-            signatures,
-        }
     }
 
     /**
@@ -287,57 +211,57 @@ export class Link implements esr.AbiProvider {
     ) {
         const t = transport || this.transport
         try {
-            const [requestType] = request.data.req
-            const signatures: string[] = []
-            let resolved
-            let signer = t.auth
-
-            this.validateRequest(request)
-
-            // If this is not an identity request, resolve it immediately
-            if (requestType !== 'identity') {
-                // resolve request using current signer and tapos values
-                const abis = await request.fetchAbis()
-                const tapos = await createTapos(this.rpc)
-                resolved = request.resolve(abis, signer, tapos)
-                // mutate request type to a transaction
-                request = await this.createRequest({
-                    transaction: resolved.transaction,
+            const linkUrl = request.data.callback
+            if (!linkUrl.startsWith(this.serviceAddress)) {
+                throw new Error('Request must have a link callback')
+            }
+            if (request.data.flags !== 2) {
+                throw new Error('Invalid request flags')
+            }
+            // wait for callback or user cancel
+            const ctx: {cancel?: () => void} = {}
+            const socket = waitForCallback(linkUrl, ctx)
+            const cancel = new Promise<never>((resolve, reject) => {
+                t.onRequest(request, (reason) => {
+                    if (ctx.cancel) {
+                        ctx.cancel()
+                    }
+                    if (typeof reason === 'string') {
+                        reject(new CancelError(reason))
+                    } else {
+                        reject(reason)
+                    }
                 })
-                // perform preflight operations on resolved request
-                const preflight = await this.preflight(resolved)
-                // if preflight succeeded and signatures were returned, append
-                if (preflight && preflight.signatures) {
-                    signatures.push(...preflight.signatures)
-                }
+            })
+            const payload = await Promise.race([socket, cancel])
+            const signer: PermissionLevel = {
+                actor: payload.sa,
+                permission: payload.sp,
             }
-            // Await the return of the signed payload
-            const payload = await this.getPayload(request, t)
-            // If the request was not resolved previously, resolve now based on the payload
-            if (!resolved) {
-                resolved = await esr.ResolvedSigningRequest.fromPayload(
-                    payload,
-                    this.requestOptions
-                )
-                signer = {
-                    actor: payload.sa,
-                    permission: payload.sp,
-                }
-            }
-            // push signatures from payload
-            signatures.push(...this.getPayloadSignatures(payload))
+            const signatures: string[] = Object.keys(payload)
+                .filter((key) => key.startsWith('sig') && key !== 'sig0')
+                .map((key) => payload[key]!)
             // recreate transaction from request response
+            const resolved = await esr.ResolvedSigningRequest.fromPayload(
+                payload,
+                this.requestOptions
+            )
+            const info = resolved.request.getInfo()
+            if (info['fuel_sig']) {
+                signatures.unshift(info['fuel_sig'])
+            }
+            const {serializedTransaction, transaction} = resolved
             const result: TransactResult = {
-                request,
-                serializedTransaction: resolved.serializedTransaction,
-                transaction: resolved.transaction,
+                request: resolved.request,
+                serializedTransaction,
+                transaction,
                 signatures,
                 payload,
                 signer,
             }
             if (broadcast) {
                 const res = await this.rpc.push_transaction({
-                    signatures,
+                    signatures: result.signatures,
                     serializedTransaction: result.serializedTransaction,
                 })
                 result.processed = res.processed
@@ -374,34 +298,30 @@ export class Link implements esr.AbiProvider {
     ): Promise<TransactResult> {
         const t = transport || this.transport
         const broadcast = options ? options.broadcast !== false : true
-        // determine if this is a transaction eosjs would have expected
-        const hasTapos = ['expiration', 'ref_block_num', 'ref_block_prefix'].every((v) =>
-            Object.keys(args).includes(v)
-        )
-        if (args.actions && hasTapos && !args.transaction) {
-            // embed the args within a transaction request type
-            const transaction: esr.abi.Transaction = {
-                ...args,
-                actions: args.actions,
-            }
-            args = {transaction}
-        }
-        // if a cosigner configuration exists, attempt to modify and cosign
-        if (this.cosigner) {
-            try {
-                // modify the transaction to add the cosigner action
-                const modified = await attemptCosign(args, this.cosigner, this.rpc)
-                // create the signing request and attempt to send
-                const request = await this.createRequest(modified)
-                const result = await this.sendRequest(request, t, broadcast)
-                return result
-            } catch (e) {
-                // if the preflight fails, no throwing and just log the error
-                console.log(e)
+        // eosjs transact compat: upgrade to transaction if args have any header fields
+        let anyArgs = args as any
+        if (
+            args.actions &&
+            (anyArgs.expiration ||
+                anyArgs.ref_block_num ||
+                anyArgs.ref_block_prefix ||
+                anyArgs.max_net_usage_words ||
+                anyArgs.max_cpu_usage_ms ||
+                anyArgs.delay_sec)
+        ) {
+            args = {
+                transaction: {
+                    expiration: '1970-01-01T00:00:00',
+                    ref_block_num: 0,
+                    ref_block_prefix: 0,
+                    max_net_usage_words: 0,
+                    max_cpu_usage_ms: 0,
+                    delay_sec: 0,
+                    ...anyArgs,
+                },
             }
         }
-        // if the cosigner doesn't exist or the cosigner fails, execute normally
-        const request = await this.createRequest(args)
+        const request = await this.createRequest(args, t)
         const result = await this.sendRequest(request, t, broadcast)
         return result
     }
@@ -776,16 +696,4 @@ function formatAuth(auth: PermissionLevel): string {
         permission = '<any>'
     }
     return `${actor}@${permission}`
-}
-
-/**
- * Convert transaction array to hex
- * @internal
- */
-function arrayToHex(data: Uint8Array) {
-    let result = ''
-    for (const x of data) {
-        result += ('00' + x.toString(16)).slice(-2)
-    }
-    return result
 }
