@@ -108,6 +108,7 @@ export class Link implements esr.AbiProvider {
     private serviceAddress: string
     private requestOptions: esr.SigningRequestEncodingOptions
     private abiCache = new Map<string, any>()
+    private pendingAbis = new Map<string, Promise<any>>()
 
     /** Create a new link instance. */
     constructor(options: LinkOptions) {
@@ -152,7 +153,13 @@ export class Link implements esr.AbiProvider {
     public async getAbi(account: string) {
         let rv = this.abiCache.get(account)
         if (!rv) {
-            rv = (await this.rpc.get_abi(account)).abi
+            let getAbi = this.pendingAbis.get(account)
+            if (!getAbi) {
+                getAbi = this.rpc.get_abi(account)
+                this.pendingAbis.set(account, getAbi)
+            }
+            rv = (await getAbi).abi
+            this.pendingAbis.delete(account)
             if (rv) {
                 this.abiCache.set(account, rv)
             }
