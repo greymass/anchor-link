@@ -239,6 +239,10 @@ export class Link implements esr.AbiProvider {
                 payload,
                 this.requestOptions
             )
+            const info = resolved.request.getInfo()
+            if (info['fuel_sig']) {
+                signatures.unshift(info['fuel_sig'])
+            }
             const {serializedTransaction, transaction} = resolved
             const result: TransactResult = {
                 request: resolved.request,
@@ -310,7 +314,7 @@ export class Link implements esr.AbiProvider {
                 },
             }
         }
-        const request = await this.createRequest(args)
+        const request = await this.createRequest(args, t)
         const result = await this.sendRequest(request, t, broadcast)
         return result
     }
