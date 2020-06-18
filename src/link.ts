@@ -180,24 +180,31 @@ export class Link implements esr.AbiProvider {
      * @internal
      */
     public async createRequest(args: esr.SigningRequestCreateArguments, transport?: LinkTransport) {
-        // generate unique callback url
-        let request = await esr.SigningRequest.create(
-            {
-                ...args,
-                chainId: this.chainId,
-                broadcast: false,
-                callback: {
-                    url: this.createCallbackUrl(),
-                    background: true,
-                },
-            },
-            this.requestOptions
-        )
         const t = transport || this.transport
-        if (t.prepare) {
-            request = await t.prepare(request)
+        try {
+            // generate unique callback url
+            let request = await esr.SigningRequest.create(
+                {
+                    ...args,
+                    chainId: this.chainId,
+                    broadcast: false,
+                    callback: {
+                        url: this.createCallbackUrl(),
+                        background: true,
+                    },
+                },
+                this.requestOptions
+            )
+            if (t.prepare) {
+                request = await t.prepare(request)
+            }
+            return request
+        } catch (error) {
+            if (t.onFailure) {
+                t.onFailure(undefined, error)
+            }
+            throw error
         }
-        return request
     }
 
     /**
@@ -302,39 +309,32 @@ export class Link implements esr.AbiProvider {
         if (t && t.showLoading) {
             t.showLoading()
         }
-        try {
-            // eosjs transact compat: upgrade to transaction if args have any header fields
-            let anyArgs = args as any
-            if (
-                args.actions &&
-                (anyArgs.expiration ||
-                    anyArgs.ref_block_num ||
-                    anyArgs.ref_block_prefix ||
-                    anyArgs.max_net_usage_words ||
-                    anyArgs.max_cpu_usage_ms ||
-                    anyArgs.delay_sec)
-            ) {
-                args = {
-                    transaction: {
-                        expiration: '1970-01-01T00:00:00',
-                        ref_block_num: 0,
-                        ref_block_prefix: 0,
-                        max_net_usage_words: 0,
-                        max_cpu_usage_ms: 0,
-                        delay_sec: 0,
-                        ...anyArgs,
-                    },
-                }
+        // eosjs transact compat: upgrade to transaction if args have any header fields
+        let anyArgs = args as any
+        if (
+            args.actions &&
+            (anyArgs.expiration ||
+                anyArgs.ref_block_num ||
+                anyArgs.ref_block_prefix ||
+                anyArgs.max_net_usage_words ||
+                anyArgs.max_cpu_usage_ms ||
+                anyArgs.delay_sec)
+        ) {
+            args = {
+                transaction: {
+                    expiration: '1970-01-01T00:00:00',
+                    ref_block_num: 0,
+                    ref_block_prefix: 0,
+                    max_net_usage_words: 0,
+                    max_cpu_usage_ms: 0,
+                    delay_sec: 0,
+                    ...anyArgs,
+                },
             }
-            const request = await this.createRequest(args, t)
-            const result = await this.sendRequest(request, t, broadcast)
-            return result
-        } catch (error) {
-            if (t.onFailure) {
-                t.onFailure(undefined, error)
-            }
-            throw error
         }
+        const request = await this.createRequest(args, t)
+        const result = await this.sendRequest(request, t, broadcast)
+        return result
     }
 
     /**
