@@ -298,6 +298,10 @@ export class Link implements esr.AbiProvider {
     ): Promise<TransactResult> {
         const t = transport || this.transport
         const broadcast = options ? options.broadcast !== false : true
+        // Initialize the loading state of the transport
+        if (t && t.showLoading) {
+            t.showLoading()
+        }
         try {
             // eosjs transact compat: upgrade to transaction if args have any header fields
             let anyArgs = args as any

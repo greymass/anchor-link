@@ -34,4 +34,6 @@ export interface LinkTransport {
     storage?: LinkStorage
     /** Can be implemented to modify request just after it has been created. */
     prepare?(request: SigningRequest, session?: LinkSession): Promise<SigningRequest>
+    /** Called immediately when the transaction starts */
+    showLoading?(): void
 }
