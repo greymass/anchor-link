@@ -19,7 +19,7 @@ export interface LinkTransport {
     /** Called if the request was successful. */
     onSuccess?(request: SigningRequest, result: TransactResult): void
     /** Called if the request failed. */
-    onFailure?(request: SigningRequest | undefined, error: Error): void
+    onFailure?(request: SigningRequest, error: Error): void
     /**
      * Called when a session request is initiated.
      * @param session Session where the request originated.

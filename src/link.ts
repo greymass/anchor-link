@@ -181,30 +181,23 @@ export class Link implements esr.AbiProvider {
      */
     public async createRequest(args: esr.SigningRequestCreateArguments, transport?: LinkTransport) {
         const t = transport || this.transport
-        try {
-            // generate unique callback url
-            let request = await esr.SigningRequest.create(
-                {
-                    ...args,
-                    chainId: this.chainId,
-                    broadcast: false,
-                    callback: {
-                        url: this.createCallbackUrl(),
-                        background: true,
-                    },
+        // generate unique callback url
+        let request = await esr.SigningRequest.create(
+            {
+                ...args,
+                chainId: this.chainId,
+                broadcast: false,
+                callback: {
+                    url: this.createCallbackUrl(),
+                    background: true,
                 },
-                this.requestOptions
-            )
-            if (t.prepare) {
-                request = await t.prepare(request)
-            }
-            return request
-        } catch (error) {
-            if (t.onFailure) {
-                t.onFailure(undefined, error)
-            }
-            throw error
+            },
+            this.requestOptions
+        )
+        if (t.prepare) {
+            request = await t.prepare(request)
         }
+        return request
     }
 
     /**
