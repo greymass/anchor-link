@@ -181,6 +181,19 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
             })
     }
 
+    prepare(request) {
+        if (this.link.transport.prepare) {
+            return this.link.transport.prepare(request, this)
+        }
+        return Promise.resolve(request)
+    }
+
+    showLoading() {
+        if (this.link.transport.showLoading) {
+            return this.link.transport.showLoading()
+        }
+    }
+
     public makeSignatureProvider(): ApiInterfaces.SignatureProvider {
         return this.link.makeSignatureProvider([this.publicKey], this)
     }
@@ -251,6 +264,19 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
             this.link.transport.onSessionRequest(this, request, cancel)
         } else {
             this.link.transport.onRequest(request, cancel)
+        }
+    }
+
+    prepare(request) {
+        if (this.link.transport.prepare) {
+            return this.link.transport.prepare(request, this)
+        }
+        return Promise.resolve(request)
+    }
+
+    showLoading() {
+        if (this.link.transport.showLoading) {
+            return this.link.transport.showLoading()
         }
     }
 

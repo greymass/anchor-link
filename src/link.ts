@@ -108,6 +108,7 @@ export class Link implements esr.AbiProvider {
     private serviceAddress: string
     private requestOptions: esr.SigningRequestEncodingOptions
     private abiCache = new Map<string, any>()
+    private pendingAbis = new Map<string, Promise<any>>()
 
     /** Create a new link instance. */
     constructor(options: LinkOptions) {
@@ -152,7 +153,13 @@ export class Link implements esr.AbiProvider {
     public async getAbi(account: string) {
         let rv = this.abiCache.get(account)
         if (!rv) {
-            rv = (await this.rpc.get_abi(account)).abi
+            let getAbi = this.pendingAbis.get(account)
+            if (!getAbi) {
+                getAbi = this.rpc.get_abi(account)
+                this.pendingAbis.set(account, getAbi)
+            }
+            rv = (await getAbi).abi
+            this.pendingAbis.delete(account)
             if (rv) {
                 this.abiCache.set(account, rv)
             }
@@ -172,9 +179,10 @@ export class Link implements esr.AbiProvider {
      * Create a SigningRequest instance configured for this link.
      * @internal
      */
-    public async createRequest(args: esr.SigningRequestCreateArguments) {
+    public async createRequest(args: esr.SigningRequestCreateArguments, transport?: LinkTransport) {
+        const t = transport || this.transport
         // generate unique callback url
-        const request = await esr.SigningRequest.create(
+        let request = await esr.SigningRequest.create(
             {
                 ...args,
                 chainId: this.chainId,
@@ -186,6 +194,9 @@ export class Link implements esr.AbiProvider {
             },
             this.requestOptions
         )
+        if (t.prepare) {
+            request = await t.prepare(request)
+        }
         return request
     }
 
@@ -240,6 +251,10 @@ export class Link implements esr.AbiProvider {
                 payload,
                 this.requestOptions
             )
+            const info = resolved.request.getInfo()
+            if (info['fuel_sig']) {
+                signatures.unshift(info['fuel_sig'])
+            }
             const {serializedTransaction, transaction} = resolved
             const result: TransactResult = {
                 request: resolved.request,
@@ -288,7 +303,34 @@ export class Link implements esr.AbiProvider {
     ): Promise<TransactResult> {
         const t = transport || this.transport
         const broadcast = options ? options.broadcast !== false : true
-        const request = await this.createRequest(args)
+        // Initialize the loading state of the transport
+        if (t && t.showLoading) {
+            t.showLoading()
+        }
+        // eosjs transact compat: upgrade to transaction if args have any header fields
+        let anyArgs = args as any
+        if (
+            args.actions &&
+            (anyArgs.expiration ||
+                anyArgs.ref_block_num ||
+                anyArgs.ref_block_prefix ||
+                anyArgs.max_net_usage_words ||
+                anyArgs.max_cpu_usage_ms ||
+                anyArgs.delay_sec)
+        ) {
+            args = {
+                transaction: {
+                    expiration: '1970-01-01T00:00:00',
+                    ref_block_num: 0,
+                    ref_block_prefix: 0,
+                    max_net_usage_words: 0,
+                    max_cpu_usage_ms: 0,
+                    delay_sec: 0,
+                    ...anyArgs,
+                },
+            }
+        }
+        const request = await this.createRequest(args, t)
         const result = await this.sendRequest(request, t, broadcast)
         return result
     }
