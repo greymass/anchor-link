@@ -567,7 +567,7 @@ export class Link implements esr.AbiProvider {
                 if (t.prepare) {
                     request = await t.prepare(request)
                 }
-                const {signatures} = await this.sendRequest(request, transport)
+                const {signatures} = await this.sendRequest(request, t)
                 return {
                     ...args,
                     signatures,
