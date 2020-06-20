@@ -556,16 +556,24 @@ export class Link implements esr.AbiProvider {
         return {
             getAvailableKeys: async () => availableKeys,
             sign: async (args) => {
-                const request = esr.SigningRequest.fromTransaction(
+                const t = transport || this.transport
+                let request = esr.SigningRequest.fromTransaction(
                     args.chainId,
                     args.serializedTransaction,
                     this.requestOptions
                 )
                 request.setCallback(this.createCallbackUrl(), true)
                 request.setBroadcast(false)
-                const {signatures} = await this.sendRequest(request, transport)
+                if (t.prepare) {
+                    request = await t.prepare(request)
+                }
+                const {
+                    serializedTransaction,
+                    signatures,
+                } = await this.sendRequest(request, t)
                 return {
                     ...args,
+                    serializedTransaction,
                     signatures,
                 }
             },
