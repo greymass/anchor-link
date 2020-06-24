@@ -140,4 +140,4 @@ Clone the repository and run `make` to checkout all dependencies and build the p
 
 ---
 
-Made with ☕️&❤️ by [team Greymass](https://greymass.com), if you find this useful please consider [supporting us](https://greymass.com/en/support).
+Made with ☕️&❤️ by [team Greymass](https://greymass.com), if you find this useful please consider [supporting us](https://greymass.com/support-us).
