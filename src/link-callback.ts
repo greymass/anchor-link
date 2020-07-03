@@ -18,7 +18,7 @@ export interface LinkCallback {
 }
 
 /** @internal */
-export class BouyCallbackService implements LinkCallbackService {
+export class BuoyCallbackService implements LinkCallbackService {
     readonly address: string
     constructor(address: string) {
         this.address = address.trim().replace(/\/$/, '')
@@ -26,12 +26,12 @@ export class BouyCallbackService implements LinkCallbackService {
 
     create() {
         const url = `${this.address}/${uuid()}`
-        return new BouyCallback(url)
+        return new BuoyCallback(url)
     }
 }
 
 /** @internal */
-class BouyCallback implements LinkCallback {
+class BuoyCallback implements LinkCallback {
     constructor(readonly url: string) {}
     private ctx: {cancel?: () => void} = {}
     wait() {

@@ -35,7 +35,7 @@ import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-sessi
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
 import {LinkCreate} from './link-types'
-import {BouyCallbackService, LinkCallback, LinkCallbackService} from './link-callback'
+import {BuoyCallbackService, LinkCallback, LinkCallbackService} from './link-callback'
 
 /**
  * Payload accepted by the [[Link.transact]] method.
@@ -154,7 +154,7 @@ export class Link implements AbiProvider {
             this.chainId = ChainId.from(LinkOptions.defaults.chainId)
         }
         if (options.service === undefined || typeof options.service === 'string') {
-            this.callbackService = new BouyCallbackService(
+            this.callbackService = new BuoyCallbackService(
                 options.service || LinkOptions.defaults.service
             )
         } else {
