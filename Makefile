@@ -10,11 +10,11 @@ lib:
 
 .NOTPARALLEL:
 $(LIB_FILES): $(SRC_FILES) lib node_modules tsconfig.json
-	microbundle -f modern,es --no-compress
-	microbundle -f cjs -i src/index-bundle.ts --no-compress
+	microbundle -f modern,es
+	microbundle -f cjs -i src/index-bundle.ts
 
 lib/bundle.js: $(SRC_FILES) lib node_modules tsconfig.json
-	microbundle -f umd --no-pkg-main --name AnchorLink --external none --no-compress \
+	microbundle -f umd --no-pkg-main --name AnchorLink --external none \
 		-i src/index-bundle.ts -o lib/bundle.js
 
 .PHONY: test
