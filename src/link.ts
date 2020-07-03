@@ -1,21 +1,41 @@
-import * as esr from 'eosio-signing-request'
-import {ApiInterfaces, JsonRpc} from 'eosjs'
-import * as ecc from 'eosjs-ecc'
-import makeFetch from 'fetch-ponyfill'
-import WebSocket from 'isomorphic-ws'
+import {
+    ABISerializable,
+    AnyAction,
+    AnyTransaction,
+    API,
+    Bytes,
+    Name,
+    NameType,
+    PermissionLevelType,
+    PrivateKey,
+    PublicKey,
+    Serializer,
+    Signature,
+    SignedTransaction,
+} from 'eosio-core'
 import zlib from 'pako'
-import {v4 as uuid} from 'uuid'
+import {APIClient, PermissionLevel, Transaction} from 'eosio-core'
+import {
+    AbiProvider,
+    CallbackPayload,
+    ChainId,
+    ChainIdVariant,
+    PlaceholderName,
+    PlaceholderPermission,
+    ResolvedSigningRequest,
+    ResolvedTransaction,
+    SigningRequest,
+    SigningRequestCreateArguments,
+    SigningRequestEncodingOptions,
+} from 'eosio-signing-request'
 
 import {CancelError, IdentityError} from './errors'
-import {LinkCreate} from './link-abi'
-import {defaults, LinkOptions} from './link-options'
+import {LinkOptions} from './link-options'
 import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
-import {abiEncode, fetch, generatePrivateKey, normalizePublicKey, publicKeyEqual} from './utils'
-
-/** EOSIO permission level with actor and signer, a.k.a. 'auth', 'authority' or 'account auth' */
-export type PermissionLevel = esr.abi.PermissionLevel
+import {LinkCreate} from './link-types'
+import {BouyCallbackService, LinkCallback, LinkCallbackService} from './link-callback'
 
 /**
  * Payload accepted by the [[Link.transact]] method.
@@ -23,11 +43,11 @@ export type PermissionLevel = esr.abi.PermissionLevel
  */
 export interface TransactArgs {
     /** Full transaction to sign. */
-    transaction?: esr.abi.Transaction
+    transaction?: AnyTransaction
     /** Action to sign. */
-    action?: esr.abi.Action
+    action?: AnyAction
     /** Actions to sign. */
-    actions?: esr.abi.Action[]
+    actions?: AnyAction[]
 }
 
 /**
@@ -46,17 +66,17 @@ export interface TransactOptions {
  */
 export interface TransactResult {
     /** The signing request that was sent. */
-    request: esr.SigningRequest
+    request: SigningRequest
     /** The transaction signatures. */
-    signatures: string[]
+    signatures: Signature[]
     /** The callback payload. */
-    payload: esr.CallbackPayload
+    payload: CallbackPayload
     /** The signer authority. */
     signer: PermissionLevel
     /** The resulting transaction. */
-    transaction: esr.abi.Transaction
-    /** Serialized version of transaction. */
-    serializedTransaction: Uint8Array
+    transaction: Transaction
+    /** Resolved version of transaction. */
+    resolvedTransaction: ResolvedTransaction
     /** Push transaction response from api node, only present if transaction was broadcast. */
     processed?: {[key: string]: any}
 }
@@ -66,9 +86,9 @@ export interface TransactResult {
  */
 export interface IdentifyResult extends TransactResult {
     /** The identified account. */
-    account: object
+    account: API.v1.AccountObject
     /** The public key that signed the identity proof.  */
-    signerKey: string
+    signerKey: PublicKey
 }
 
 /**
@@ -95,18 +115,18 @@ export interface LoginResult extends IdentifyResult {
  * const result = await link.transact({actions: myActions})
  * ```
  */
-export class Link implements esr.AbiProvider {
-    /** The eosjs RPC instance used to communicate with the EOSIO node. */
-    public readonly rpc: JsonRpc
+export class Link implements AbiProvider {
+    /** The eosjs-core api client instance used to communicate with the EOSIO node. */
+    public readonly client: APIClient
     /** Transport used to deliver requests to the user wallet. */
     public readonly transport: LinkTransport
     /** EOSIO ChainID for which requests are valid. */
-    public readonly chainId: string
+    public readonly chainId: ChainId
     /** Storage adapter used to persist sessions. */
     public readonly storage?: LinkStorage
 
-    private serviceAddress: string
-    private requestOptions: esr.SigningRequestEncodingOptions
+    private callbackService: LinkCallbackService
+    private requestOptions: SigningRequestEncodingOptions
     private abiCache = new Map<string, any>()
     private pendingAbis = new Map<string, Promise<any>>()
 
@@ -120,28 +140,32 @@ export class Link implements esr.AbiProvider {
                 'options.transport is required, see https://github.com/greymass/anchor-link#transports'
             )
         }
-        if (options.rpc === undefined || typeof options.rpc === 'string') {
-            this.rpc = new JsonRpc(options.rpc || defaults.rpc, {fetch: fetch as any})
+        if (options.client === undefined || typeof options.client === 'string') {
+            this.client = new APIClient({url: options.client || LinkOptions.defaults.client})
         } else {
-            this.rpc = options.rpc
+            this.client = options.client
         }
         if (options.chainId) {
-            this.chainId =
-                typeof options.chainId === 'number'
-                    ? esr.nameToId(options.chainId)
-                    : options.chainId
+            this.chainId = ChainIdVariant.from(
+                options.chainId,
+                typeof options.chainId === 'string' ? 'chain_id' : 'chain_alias'
+            ).chainId
         } else {
-            this.chainId = defaults.chainId
+            this.chainId = ChainId.from(LinkOptions.defaults.chainId)
         }
-        this.serviceAddress = (options.service || defaults.service).trim().replace(/\/$/, '')
+        if (options.service === undefined || typeof options.service === 'string') {
+            this.callbackService = new BouyCallbackService(
+                options.service || LinkOptions.defaults.service
+            )
+        } else {
+            this.callbackService = options.service
+        }
         this.transport = options.transport
         if (options.storage !== null) {
             this.storage = options.storage || this.transport.storage
         }
         this.requestOptions = {
             abiProvider: this,
-            textDecoder: options.textDecoder || new TextDecoder(),
-            textEncoder: options.textEncoder || new TextEncoder(),
             zlib,
         }
     }
@@ -150,54 +174,44 @@ export class Link implements esr.AbiProvider {
      * Fetch the ABI for given account, cached.
      * @internal
      */
-    public async getAbi(account: string) {
-        let rv = this.abiCache.get(account)
+    public async getAbi(account: Name) {
+        const key = account.toString()
+        let rv = this.abiCache.get(key)
         if (!rv) {
-            let getAbi = this.pendingAbis.get(account)
+            let getAbi = this.pendingAbis.get(key)
             if (!getAbi) {
-                getAbi = this.rpc.get_abi(account)
-                this.pendingAbis.set(account, getAbi)
+                getAbi = this.client.v1.chain.get_abi(account)
+                this.pendingAbis.set(key, getAbi)
             }
             rv = (await getAbi).abi
-            this.pendingAbis.delete(account)
+            this.pendingAbis.delete(key)
             if (rv) {
-                this.abiCache.set(account, rv)
+                this.abiCache.set(key, rv)
             }
         }
         return rv
     }
 
     /**
-     * Create a new unique buoy callback url.
-     * @internal
-     */
-    public createCallbackUrl() {
-        return `${this.serviceAddress}/${uuid()}`
-    }
-
-    /**
      * Create a SigningRequest instance configured for this link.
      * @internal
      */
-    public async createRequest(args: esr.SigningRequestCreateArguments, transport?: LinkTransport) {
+    public async createRequest(args: SigningRequestCreateArguments, transport?: LinkTransport) {
         const t = transport || this.transport
-        // generate unique callback url
-        let request = await esr.SigningRequest.create(
+        let request = await SigningRequest.create(
             {
                 ...args,
-                chainId: this.chainId,
+                chainId: this.chainId.toString(),
                 broadcast: false,
-                callback: {
-                    url: this.createCallbackUrl(),
-                    background: true,
-                },
             },
             this.requestOptions
         )
         if (t.prepare) {
             request = await t.prepare(request)
         }
-        return request
+        const callback = this.callbackService.create()
+        request.setCallback(callback.url, true)
+        return {request, callback}
     }
 
     /**
@@ -205,32 +219,24 @@ export class Link implements esr.AbiProvider {
      * @internal
      */
     public async sendRequest(
-        request: esr.SigningRequest,
+        request: SigningRequest,
+        callback: LinkCallback,
         transport?: LinkTransport,
         broadcast = false
     ) {
         const t = transport || this.transport
         try {
             const linkUrl = request.data.callback
-            if (!linkUrl.startsWith(this.serviceAddress)) {
-                throw new Error('Request must have a link callback')
+            if (linkUrl !== callback.url) {
+                throw new Error('Invalid request callback')
             }
-            if (request.data.flags !== 2) {
+            if (request.data.flags.broadcast === true || request.data.flags.background === false) {
                 throw new Error('Invalid request flags')
             }
             // wait for callback or user cancel
-            const ctx: {cancel?: () => void} = {}
-            const socket = waitForCallback(linkUrl, ctx).then((data) => {
-                if (typeof data.rejected === 'string') {
-                    throw new CancelError(`Rejected by wallet: ${data.rejected}`)
-                }
-                return data
-            })
             const cancel = new Promise<never>((resolve, reject) => {
                 t.onRequest(request, (reason) => {
-                    if (ctx.cancel) {
-                        ctx.cancel()
-                    }
+                    callback.cancel()
                     if (typeof reason === 'string') {
                         reject(new CancelError(reason))
                     } else {
@@ -238,37 +244,35 @@ export class Link implements esr.AbiProvider {
                     }
                 })
             })
-            const payload = await Promise.race([socket, cancel])
-            const signer: PermissionLevel = {
+            const payload = await Promise.race([callback.wait(), cancel])
+            const signer = PermissionLevel.from({
                 actor: payload.sa,
                 permission: payload.sp,
-            }
-            const signatures: string[] = Object.keys(payload)
+            })
+            const signatures: Signature[] = Object.keys(payload)
                 .filter((key) => key.startsWith('sig') && key !== 'sig0')
-                .map((key) => payload[key]!)
+                .map((key) => Signature.from(payload[key]!))
             // recreate transaction from request response
-            const resolved = await esr.ResolvedSigningRequest.fromPayload(
-                payload,
-                this.requestOptions
-            )
-            const info = resolved.request.getInfo()
-            if (info['fuel_sig']) {
-                signatures.unshift(info['fuel_sig'])
+            const resolved = await ResolvedSigningRequest.fromPayload(payload, this.requestOptions)
+            // TODO: use the signature type directly instead of the string now that its not a pain to do
+            const fuelSig = resolved.request.getInfoKey<string>('fuel_sig', 'string')
+            if (fuelSig) {
+                signatures.unshift(Signature.from(fuelSig))
             }
-            const {serializedTransaction, transaction} = resolved
             const result: TransactResult = {
                 request: resolved.request,
-                serializedTransaction,
-                transaction,
+                transaction: resolved.transaction,
+                resolvedTransaction: resolved.resolvedTransaction,
                 signatures,
                 payload,
                 signer,
             }
             if (broadcast) {
-                const res = await this.rpc.push_transaction({
-                    signatures: result.signatures,
-                    serializedTransaction: result.serializedTransaction,
+                const signedTx = SignedTransaction.from({
+                    ...resolved.transaction,
+                    signatures,
                 })
+                const res = await this.client.v1.chain.push_transaction(signedTx)
                 result.processed = res.processed
             }
             if (t.onSuccess) {
@@ -308,7 +312,7 @@ export class Link implements esr.AbiProvider {
             t.showLoading()
         }
         // eosjs transact compat: upgrade to transaction if args have any header fields
-        let anyArgs = args as any
+        const anyArgs = args as any
         if (
             args.actions &&
             (anyArgs.expiration ||
@@ -330,8 +334,8 @@ export class Link implements esr.AbiProvider {
                 },
             }
         }
-        const request = await this.createRequest(args, t)
-        const result = await this.sendRequest(request, t, broadcast)
+        const {request, callback} = await this.createRequest(args, t)
+        const result = await this.sendRequest(request, callback, t, broadcast)
         return result
     }
 
@@ -342,30 +346,29 @@ export class Link implements esr.AbiProvider {
      * @note This is for advanced use-cases, you probably want to use [[Link.login]] instead.
      */
     public async identify(
-        requestPermission?: PermissionLevel,
-        info?: {[key: string]: string | Uint8Array}
+        requestPermission?: PermissionLevelType,
+        info?: {[key: string]: ABISerializable | Bytes}
     ): Promise<IdentifyResult> {
-        const request = await this.createRequest({
-            identity: {permission: requestPermission || null},
+        const {request, callback} = await this.createRequest({
+            identity: {permission: requestPermission},
             info,
         })
-        const res = await this.sendRequest(request)
+        const res = await this.sendRequest(request, callback)
         if (!res.request.isIdentity()) {
             throw new IdentityError(`Unexpected response`)
         }
-        const message = Buffer.concat([
-            Buffer.from(request.getChainId(), 'hex'),
-            Buffer.from(res.serializedTransaction),
-            Buffer.alloc(32),
-        ])
+        const digest = res.transaction.signingDigest(request.getChainId())
+        const signature = res.signatures[0]
+        const signerKey = signature.recoverDigest(digest)
+
         const {signer} = res
-        const signerKey = ecc.recover(res.signatures[0], message)
-        const account = await this.rpc.get_account(signer.actor)
+
+        const account = await this.client.v1.chain.get_account(signer.actor.toString()) // TODO: get_account should accept NameType
         if (!account) {
             throw new IdentityError(`Signature from unknown account: ${signer.actor}`)
         }
-        const permission = account.permissions.find(
-            ({perm_name}) => perm_name === signer.permission
+        const permission = account.permissions.find(({perm_name}) =>
+            signer.permission.equals(perm_name)
         )
         if (!permission) {
             throw new IdentityError(
@@ -373,7 +376,7 @@ export class Link implements esr.AbiProvider {
             )
         }
         const auth = permission.required_auth
-        const keyAuth = auth.keys.find(({key}) => publicKeyEqual(key, signerKey))
+        const keyAuth = auth.keys.find(({key}) => signerKey.equals(key))
         if (!keyAuth) {
             throw new IdentityError(`${formatAuth(signer)} has no key matching id signature`)
         }
@@ -381,15 +384,15 @@ export class Link implements esr.AbiProvider {
             throw new IdentityError(`${formatAuth(signer)} signature does not reach auth threshold`)
         }
         if (requestPermission) {
+            const perm = PermissionLevel.from(requestPermission)
             if (
-                (requestPermission.actor !== esr.PlaceholderName &&
-                    requestPermission.actor !== signer.actor) ||
-                (requestPermission.permission !== esr.PlaceholderPermission &&
-                    requestPermission.permission !== signer.permission)
+                (!perm.actor.equals(PlaceholderName) && !perm.actor.equals(signer.actor)) ||
+                (!perm.permission.equals(PlaceholderPermission) &&
+                    !perm.permission.equals(signer.permission))
             ) {
                 throw new IdentityError(
                     `Unexpected identity proof from ${formatAuth(signer)}, expected ${formatAuth(
-                        requestPermission
+                        perm
                     )} `
                 )
             }
@@ -406,15 +409,15 @@ export class Link implements esr.AbiProvider {
      * @param identifier The session identifier, an EOSIO name (`[a-z1-5]{1,12}`).
      *                   Should be set to the contract account if applicable.
      */
-    public async login(identifier: string): Promise<LoginResult> {
-        const privateKey = await generatePrivateKey()
-        const requestKey = ecc.privateToPublic(privateKey)
-        const createInfo: LinkCreate = {
+    public async login(identifier: NameType): Promise<LoginResult> {
+        const privateKey = PrivateKey.generate('K1')
+        const requestKey = privateKey.toPublic()
+        const createInfo = LinkCreate.from({
             session_name: identifier,
             request_key: requestKey,
-        }
+        })
         const res = await this.identify(undefined, {
-            link: abiEncode(createInfo, 'link_create'),
+            link: createInfo,
         })
         const metadata = {sameDevice: res.request.getRawInfo()['return_path'] !== undefined}
         let session: LinkSession
@@ -469,13 +472,13 @@ export class Link implements esr.AbiProvider {
         if (auth) {
             key = this.sessionKey(identifier, formatAuth(auth))
         } else {
-            let latest = (await this.listSessions(identifier))[0]
+            const latest = (await this.listSessions(identifier))[0]
             if (!latest) {
                 return null
             }
             key = this.sessionKey(identifier, formatAuth(latest))
         }
-        let data = await this.storage.read(key)
+        const data = await this.storage.read(key)
         if (!data) {
             return null
         }
@@ -500,11 +503,11 @@ export class Link implements esr.AbiProvider {
      * The most recently used session is at the top (index 0).
      * @throws If no [[LinkStorage]] adapter is configured or there was an error retrieving the session list.
      **/
-    public async listSessions(identifier: string) {
+    public async listSessions(identifier: NameType) {
         if (!this.storage) {
             throw new Error('Unable to list sessions: No storage adapter configured')
         }
-        let key = this.sessionKey(identifier, 'list')
+        const key = this.sessionKey(identifier, 'list')
         let list: PermissionLevel[]
         try {
             list = JSON.parse((await this.storage.read(key)) || '[]')
@@ -520,11 +523,11 @@ export class Link implements esr.AbiProvider {
      * Remove stored session for given identifier and auth.
      * @throws If no [[LinkStorage]] adapter is configured or there was an error removing the session data.
      */
-    public async removeSession(identifier: string, auth: PermissionLevel) {
+    public async removeSession(identifier: NameType, auth: PermissionLevel) {
         if (!this.storage) {
             throw new Error('Unable to remove session: No storage adapter configured')
         }
-        let key = this.sessionKey(identifier, formatAuth(auth))
+        const key = this.sessionKey(identifier, formatAuth(auth))
         await this.storage.remove(key)
         await this.touchSession(identifier, auth, true)
     }
@@ -549,28 +552,24 @@ export class Link implements esr.AbiProvider {
      * @note We don't know what keys are available so those have to be provided,
      *       to avoid this use [[LinkSession.makeSignatureProvider]] instead. Sessions can be created with [[Link.login]].
      */
-    public makeSignatureProvider(
-        availableKeys: string[],
-        transport?: LinkTransport
-    ): ApiInterfaces.SignatureProvider {
+    public makeSignatureProvider(availableKeys: string[], transport?: LinkTransport): any {
         return {
             getAvailableKeys: async () => availableKeys,
             sign: async (args) => {
                 const t = transport || this.transport
-                let request = esr.SigningRequest.fromTransaction(
+                let request = SigningRequest.fromTransaction(
                     args.chainId,
                     args.serializedTransaction,
                     this.requestOptions
                 )
-                request.setCallback(this.createCallbackUrl(), true)
+                const callback = this.callbackService.create()
+                request.setCallback(callback.url, true)
                 request.setBroadcast(false)
                 if (t.prepare) {
                     request = await t.prepare(request)
                 }
-                const {
-                    serializedTransaction,
-                    signatures,
-                } = await this.sendRequest(request, t)
+                const {transaction, signatures} = await this.sendRequest(request, callback, t)
+                const serializedTransaction = Serializer.encode({object: transaction})
                 return {
                     ...args,
                     serializedTransaction,
@@ -580,137 +579,47 @@ export class Link implements esr.AbiProvider {
         }
     }
 
-    /**
-     * Create an eosjs authority provider using this link.
-     * @note Uses the configured RPC Node's `/v1/chain/get_required_keys` API to resolve keys.
-     */
-    public makeAuthorityProvider(): ApiInterfaces.AuthorityProvider {
-        const {rpc} = this
-        return {
-            async getRequiredKeys(args: ApiInterfaces.AuthorityProviderArgs) {
-                const {availableKeys, transaction} = args
-                const result = await rpc.fetch('/v1/chain/get_required_keys', {
-                    transaction,
-                    available_keys: availableKeys.map(normalizePublicKey),
-                })
-                return result.required_keys.map(normalizePublicKey)
-            },
-        }
-    }
-
     /** Makes sure session is in storage list of sessions and moves it to top (most recently used). */
-    private async touchSession(identifier: string, auth: PermissionLevel, remove = false) {
-        let auths = await this.listSessions(identifier)
-        let formattedAuth = formatAuth(auth)
-        let existing = auths.findIndex((a) => formatAuth(a) === formattedAuth)
+    private async touchSession(identifier: NameType, auth: PermissionLevel, remove = false) {
+        const auths = await this.listSessions(identifier)
+        const formattedAuth = formatAuth(auth)
+        const existing = auths.findIndex((a) => formatAuth(a) === formattedAuth)
         if (existing >= 0) {
             auths.splice(existing, 1)
         }
         if (remove === false) {
             auths.unshift(auth)
         }
-        let key = this.sessionKey(identifier, 'list')
+        const key = this.sessionKey(identifier, 'list')
         await this.storage!.write(key, JSON.stringify(auths))
     }
 
     /** Makes sure session is in storage list of sessions and moves it to top (most recently used). */
-    private async storeSession(identifier: string, session: LinkSession) {
-        let key = this.sessionKey(identifier, formatAuth(session.auth))
-        let data = JSON.stringify(session.serialize())
+    private async storeSession(identifier: NameType, session: LinkSession) {
+        const key = this.sessionKey(identifier, formatAuth(session.auth))
+        const data = JSON.stringify(session.serialize())
         await this.storage!.write(key, data)
         await this.touchSession(identifier, session.auth)
     }
 
     /** Session storage key for identifier and suffix. */
-    private sessionKey(identifier: string, suffix: string) {
-        return [this.chainId, identifier, suffix].join('-')
+    private sessionKey(identifier: NameType, suffix: string) {
+        return [this.chainId.toString(), Name.from(identifier).toString(), suffix].join('-')
     }
-}
-
-/**
- * Connect to a WebSocket channel and wait for a message.
- * @internal
- */
-function waitForCallback(url: string, ctx: {cancel?: () => void}) {
-    return new Promise<esr.CallbackPayload>((resolve, reject) => {
-        let active = true
-        let retries = 0
-        const socketUrl = url.replace(/^http/, 'ws')
-        const handleResponse = (response: string) => {
-            try {
-                resolve(JSON.parse(response))
-            } catch (error) {
-                error.message = 'Unable to parse callback JSON: ' + error.message
-                reject(error)
-            }
-        }
-        const connect = () => {
-            const socket = new WebSocket(socketUrl)
-            ctx.cancel = () => {
-                active = false
-                if (
-                    socket.readyState === WebSocket.OPEN ||
-                    socket.readyState === WebSocket.CONNECTING
-                ) {
-                    socket.close()
-                }
-            }
-            socket.onmessage = (event) => {
-                active = false
-                if (socket.readyState === WebSocket.OPEN) {
-                    socket.close()
-                }
-                if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                        handleResponse(reader.result as string)
-                    }
-                    reader.onerror = (error) => {
-                        reject(error)
-                    }
-                    reader.readAsText(event.data)
-                } else {
-                    if (typeof event.data === 'string') {
-                        handleResponse(event.data)
-                    } else {
-                        handleResponse(event.data.toString())
-                    }
-                }
-            }
-            socket.onopen = () => {
-                retries = 0
-            }
-            socket.onerror = (error) => {}
-            socket.onclose = (close) => {
-                if (active) {
-                    setTimeout(connect, backoff(retries++))
-                }
-            }
-        }
-        connect()
-    })
-}
-
-/**
- * Exponential backoff function that caps off at 10s after 10 tries.
- * https://i.imgur.com/IrUDcJp.png
- * @internal
- */
-function backoff(tries: number): number {
-    return Math.min(Math.pow(tries * 10, 2), 10 * 1000)
 }
 
 /**
  * Format a EOSIO permission level in the format `actor@permission` taking placeholders into consideration.
  * @internal
  */
-function formatAuth(auth: PermissionLevel): string {
-    let {actor, permission} = auth
-    if (actor === esr.PlaceholderName) {
-        actor = '<any>'
-    }
-    if (permission === esr.PlaceholderName || permission === esr.PlaceholderPermission) {
+function formatAuth(auth: PermissionLevelType): string {
+    const a = PermissionLevel.from(auth)
+    const actor = a.actor.equals(PlaceholderName) ? '<any>' : String(a.actor)
+    let permission: string
+    if (a.permission.equals(PlaceholderName) || a.permission.equals(PlaceholderPermission)) {
         permission = '<any>'
+    } else {
+        permission = String(a.permission)
     }
     return `${actor}@${permission}`
 }

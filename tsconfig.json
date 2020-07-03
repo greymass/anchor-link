@@ -4,6 +4,7 @@
         "downlevelIteration": true,
         "esModuleInterop": true,
         "lib": ["esnext", "dom"],
+        "experimentalDecorators": true,
         "moduleResolution": "node",
         "noImplicitAny": false,
         "outDir": "lib",
