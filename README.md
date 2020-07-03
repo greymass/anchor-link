@@ -95,7 +95,7 @@ link.transact({action}).then((result) => {
 
 See the [Link.transact API docs](https://greymass.github.io/anchor-link/classes/link.html#transact) for all options and return values.
 
-To create a persistent login session use [Link.login](https://greymass.github.io/anchor-link/classes/link.html#login), example: 
+To create a persistent login session use [Link.login](https://greymass.github.io/anchor-link/classes/link.html#login), example:
 
 ```ts
 link.login('mydapp').then(({session}) => {
@@ -113,7 +113,7 @@ Transports in Anchor Link are responsible for getting signature requests to the 
 
 Available transports:
 
- Package | Description 
+ Package | Description
 ---------| ---------------
  [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport) | Browser overlay that generates QR codes or triggers local URI handler if available
  [anchor-link-console-transport](https://github.com/greymass/anchor-link-console-transport) | Transport that prints ASCII QR codes and esr:// links to the JavaScript console

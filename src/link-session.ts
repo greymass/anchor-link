@@ -1,11 +1,21 @@
 import {SigningRequest} from 'eosio-signing-request'
-import {ApiInterfaces} from 'eosjs'
 
+import {
+    Name,
+    NameType,
+    PermissionLevel,
+    PermissionLevelType,
+    PrivateKey,
+    PrivateKeyType,
+    PublicKey,
+    PublicKeyType,
+    Serializer,
+} from 'eosio-core'
 import {SessionError} from './errors'
-import {Link, PermissionLevel, TransactArgs, TransactOptions, TransactResult} from './link'
-import {LinkInfo} from './link-abi'
+import {Link, TransactArgs, TransactOptions, TransactResult} from './link'
 import {LinkTransport} from './link-transport'
-import {abiEncode, fetch, sealMessage} from './utils'
+import {LinkInfo, SealedMessage} from './link-types'
+import {fetch, sealMessage} from './utils'
 
 /**
  * Type describing a link session that can create a eosjs compatible
@@ -15,22 +25,17 @@ export abstract class LinkSession {
     /** The underlying link instance used by the session. */
     abstract link: Link
     /** App identifier that owns the session. */
-    abstract identifier: string
+    abstract identifier: Name
     /** The public key the session can sign for. */
-    abstract publicKey: string
+    abstract publicKey: PublicKey
     /** The EOSIO auth (a.k.a. permission level) the session can sign for. */
-    abstract auth: {
-        actor: string
-        permission: string
-    }
+    abstract auth: PermissionLevel
     /** Session type, e.g. 'channel'.  */
     abstract type: string
     /** Arbitrary metadata that will be serialized with the session. */
     abstract metadata: {[key: string]: any}
-    /** Creates a eosjs compatible authority provider. */
-    abstract makeAuthorityProvider(): ApiInterfaces.AuthorityProvider
     /** Creates a eosjs compatible signature provider that can sign for the session public key. */
-    abstract makeSignatureProvider(): ApiInterfaces.SignatureProvider
+    abstract makeSignatureProvider(): any
     /**
      * Transact using this session. See [[Link.transact]].
      */
@@ -72,7 +77,7 @@ export interface SerializedLinkSession {
 /** @internal */
 interface ChannelInfo {
     /** Public key requests are encrypted to. */
-    key: string
+    key: PublicKeyType
     /** The wallet given channel name, usually the device name. */
     name: string
     /** The channel push url. */
@@ -82,15 +87,15 @@ interface ChannelInfo {
 /** @internal */
 export interface LinkChannelSessionData {
     /** App identifier that owns the session. */
-    identifier: string
+    identifier: NameType
     /** Authenticated user permission. */
-    auth: PermissionLevel
+    auth: PermissionLevelType
     /** Public key of authenticated user */
-    publicKey: string
+    publicKey: PublicKeyType
     /** The wallet channel url. */
     channel: ChannelInfo
     /** The private request key. */
-    requestKey: string
+    requestKey: PrivateKeyType
 }
 
 /**
@@ -100,24 +105,26 @@ export interface LinkChannelSessionData {
 export class LinkChannelSession extends LinkSession implements LinkTransport {
     readonly link: Link
     readonly auth: PermissionLevel
-    readonly identifier: string
+    readonly identifier: Name
     readonly type = 'channel'
     readonly metadata
-    readonly publicKey: string
+    readonly publicKey: PublicKey
     serialize: () => SerializedLinkSession
     private channel: ChannelInfo
     private timeout = 2 * 60 * 1000 // ms
-    private encrypt: (request: SigningRequest) => Uint8Array
+    private encrypt: (request: SigningRequest) => SealedMessage
 
     constructor(link: Link, data: LinkChannelSessionData, metadata: any) {
         super()
         this.link = link
-        this.auth = data.auth
-        this.publicKey = data.publicKey
+        this.auth = PermissionLevel.from(data.auth)
+        this.publicKey = PublicKey.from(data.publicKey)
         this.channel = data.channel
-        this.identifier = data.identifier
+        this.identifier = Name.from(data.identifier)
+        const privateKey = PrivateKey.from(data.requestKey)
+        const publicKey = PublicKey.from(data.channel.key)
         this.encrypt = (request) => {
-            return sealMessage(request.encode(true, false), data.requestKey, data.channel.key)
+            return sealMessage(request.encode(true, false), privateKey, publicKey)
         }
         this.metadata = {
             ...(metadata || {}),
@@ -143,26 +150,23 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         }
     }
 
-    onRequest(request, cancel) {
-        const info: LinkInfo = {
+    onRequest(request: SigningRequest, cancel) {
+        const info = LinkInfo.from({
             expiration: new Date(Date.now() + this.timeout).toISOString().slice(0, -1),
-        }
+        })
         if (this.link.transport.onSessionRequest) {
             this.link.transport.onSessionRequest(this, request, cancel)
         }
         setTimeout(() => {
             cancel(new SessionError('Wallet did not respond in time', 'E_TIMEOUT'))
         }, this.timeout + 500)
-        request.data.info.push({
-            key: 'link',
-            value: abiEncode(info, 'link_info'),
-        })
+        request.setInfoKey('link', info)
         fetch(this.channel.url, {
             method: 'POST',
             headers: {
                 'X-Buoy-Wait': (this.timeout / 1000).toFixed(0),
             },
-            body: this.encrypt(request),
+            body: Serializer.encode({object: this.encrypt(request)}).array,
         })
             .then((response) => {
                 if (response.status !== 200) {
@@ -194,12 +198,8 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         }
     }
 
-    public makeSignatureProvider(): ApiInterfaces.SignatureProvider {
-        return this.link.makeSignatureProvider([this.publicKey], this)
-    }
-
-    public makeAuthorityProvider(): ApiInterfaces.AuthorityProvider {
-        return this.link.makeAuthorityProvider()
+    public makeSignatureProvider(): any {
+        return this.link.makeSignatureProvider([this.publicKey.toString()], this)
     }
 
     transact(args: TransactArgs, options?: TransactOptions) {
@@ -209,12 +209,9 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
 
 /** @internal */
 export interface LinkFallbackSessionData {
-    auth: {
-        actor: string
-        permission: string
-    }
-    publicKey: string
-    identifier: string
+    auth: PermissionLevelType
+    publicKey: PublicKeyType
+    identifier: NameType
 }
 
 /**
@@ -223,23 +220,20 @@ export interface LinkFallbackSessionData {
  */
 export class LinkFallbackSession extends LinkSession implements LinkTransport {
     readonly link: Link
-    readonly auth: {
-        actor: string
-        permission: string
-    }
+    readonly auth: PermissionLevel
     readonly type = 'fallback'
-    readonly identifier: string
+    readonly identifier: Name
     readonly metadata: {[key: string]: any}
-    readonly publicKey: string
+    readonly publicKey: PublicKey
     serialize: () => SerializedLinkSession
 
     constructor(link: Link, data: LinkFallbackSessionData, metadata: any) {
         super()
         this.link = link
-        this.auth = data.auth
-        this.publicKey = data.publicKey
+        this.auth = PermissionLevel.from(data.auth)
+        this.publicKey = PublicKey.from(data.publicKey)
         this.metadata = metadata || {}
-        this.identifier = data.identifier
+        this.identifier = Name.from(data.identifier)
         this.serialize = () => ({
             type: this.type,
             data,
@@ -280,12 +274,8 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
         }
     }
 
-    public makeSignatureProvider(): ApiInterfaces.SignatureProvider {
-        return this.link.makeSignatureProvider([this.publicKey], this)
-    }
-
-    public makeAuthorityProvider(): ApiInterfaces.AuthorityProvider {
-        return this.link.makeAuthorityProvider()
+    public makeSignatureProvider(): any {
+        return this.link.makeSignatureProvider([this.publicKey.toString()], this)
     }
 
     transact(args: TransactArgs, options?: TransactOptions) {

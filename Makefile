@@ -1,48 +1,48 @@
+PATH  := $(PATH):$(PWD)/node_modules/.bin
+SHELL := env PATH=$(PATH) /bin/bash
 SRC_FILES := $(shell find src -name '*.ts')
+LIB_FILES := lib/index.js lib/index.m.js lib/index.esm.js
 
-all: lib lib/bundle.js lib/index.es5.js
+all: $(LIB_FILES) lib/bundle.js
 
-lib: $(SRC_FILES) node_modules tsconfig.json
-	./node_modules/.bin/tsc -p tsconfig.json --outDir lib
-	touch lib
+lib:
+	mkdir lib
 
-lib/bundle.js: $(SRC_FILES) node_modules tsconfig.json
-	./node_modules/.bin/browserify --debug -e src/index-bundle.js -p tsify -s AnchorLink \
-	| ./node_modules/.bin/exorcist lib/bundle.js.map > lib/bundle.js
+.NOTPARALLEL:
+$(LIB_FILES): $(SRC_FILES) lib node_modules tsconfig.json
+	microbundle -f modern,es --no-compress
+	microbundle -f cjs -i src/index-bundle.ts --no-compress
 
-lib/index.es5.js: $(SRC_FILES) node_modules tsconfig.json
-	./node_modules/.bin/browserify --debug -e src/index-bundle.js -p tsify \
-		-s AnchorLink --node --no-bundle-external \
-	| ./node_modules/.bin/exorcist lib/index.es5.js.map > lib/index.es5.js
+lib/bundle.js: $(SRC_FILES) lib node_modules tsconfig.json
+	microbundle -f umd --no-pkg-main --name AnchorLink --external none --no-compress \
+		-i src/index-bundle.ts -o lib/bundle.js
 
-.PHONY: update-abi-types
-update-abi-types: node_modules
-	./node_modules/.bin/ts-node -e "import data from './src/link-abi-data'; console.log(JSON.stringify(data))" \
-	| ./node_modules/.bin/eosio-abi2ts -e >src/link-abi.d.ts.tmp && mv src/link-abi.d.ts.tmp src/link-abi.d.ts
+.PHONY: test
+test: node_modules
+	@mocha -u tdd -r ts-node/register --extension ts test/*.ts --grep '$(grep)'
+
+.PHONY: coverage
+coverage: node_modules
+	@nyc --reporter=html mocha -u tdd -r ts-node/register --extension ts test/*.ts -R nyan && open coverage/index.html
 
 .PHONY: lint
 lint: node_modules
-	NODE_ENV=test ./node_modules/.bin/tslint -p tsconfig.json -c tslint.json -t stylish --fix
+	@eslint src --ext .ts --fix
 
-docs: $(SRC_FILES) node_modules
-	./node_modules/.bin/typedoc \
-		--mode file --stripInternal \
-		--excludeNotExported --excludePrivate --excludeProtected \
-		--name "Anchor Link" --readme none \
-		--out docs \
-		src/index.ts
+.PHONY: ci-test
+ci-test: node_modules
+	@nyc --reporter=text mocha -u tdd -r ts-node/register --extension ts test/*.ts -R list
 
-.PHONY: deploy-site
-deploy-site: docs
-	cp -r ./examples ./docs/examples/
-	./node_modules/.bin/gh-pages -d docs
+.PHONY: ci-lint
+ci-lint: node_modules
+	@eslint src --ext .ts --max-warnings 0 --format unix && echo "Ok"
 
 node_modules:
-	yarn install --non-interactive --frozen-lockfile
+	yarn install --non-interactive --frozen-lockfile --ignore-scripts
 
 .PHONY: clean
 clean:
-	rm -rf lib/ docs/
+	rm -rf lib/ coverage/
 
 .PHONY: distclean
 distclean: clean

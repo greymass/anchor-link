@@ -1,7 +1,8 @@
-import {ChainName} from 'eosio-signing-request'
-import {JsonRpc} from 'eosjs'
+import {APIClient} from 'eosio-core'
+import {ChainId, ChainName} from 'eosio-signing-request'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
+import {LinkCallbackService} from './link-callback'
 
 /**
  * Available options when creating a new [[Link]] instance.
@@ -15,17 +16,17 @@ export interface LinkOptions {
      * ChainID or esr chain name alias for which the link is valid.
      * Defaults to EOS (aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906).
      */
-    chainId?: string | ChainName
+    chainId?: ChainName | ChainId | string
     /**
-     * URL to EOSIO node to communicate with or e eosjs JsonRpc instance.
+     * URL to EOSIO node to communicate with or a eosio-core APIClient instance.
      * Defaults to https://eos.greymass.com
      */
-    rpc?: string | JsonRpc
+    client?: string | APIClient
     /**
      * URL to link callback service.
      * Defaults to https://cb.anchor.link.
      */
-    service?: string
+    service?: string | LinkCallbackService
     /**
      * Optional storage adapter that will be used to persist sessions if set.
      * If not storage adapter is set but the given transport provides a storage, that will be used.
@@ -42,9 +43,11 @@ export interface LinkOptions {
     textDecoder?: TextDecoder
 }
 
-/** @internal */
-export const defaults = {
-    chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
-    rpc: 'https://eos.greymass.com',
-    service: 'https://cb.anchor.link',
+export namespace LinkOptions {
+    /** @internal */
+    export const defaults = {
+        chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+        client: 'https://eos.greymass.com',
+        service: 'https://cb.anchor.link',
+    }
 }
