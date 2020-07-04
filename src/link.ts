@@ -19,7 +19,6 @@ import {
     AbiProvider,
     CallbackPayload,
     ChainId,
-    ChainIdVariant,
     PlaceholderName,
     PlaceholderPermission,
     ResolvedSigningRequest,
@@ -145,14 +144,7 @@ export class Link implements AbiProvider {
         } else {
             this.client = options.client
         }
-        if (options.chainId) {
-            this.chainId = ChainIdVariant.from(
-                options.chainId,
-                typeof options.chainId === 'string' ? 'chain_id' : 'chain_alias'
-            ).chainId
-        } else {
-            this.chainId = ChainId.from(LinkOptions.defaults.chainId)
-        }
+        this.chainId = ChainId.from(options.chainId || LinkOptions.defaults.chainId)
         if (options.service === undefined || typeof options.service === 'string') {
             this.callbackService = new BouyCallbackService(
                 options.service || LinkOptions.defaults.service
