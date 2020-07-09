@@ -1,5 +1,3 @@
-import {SigningRequest} from 'eosio-signing-request'
-
 import {
     Name,
     NameType,
@@ -10,7 +8,10 @@ import {
     PublicKey,
     PublicKeyType,
     Serializer,
-} from 'eosio-core'
+} from '@greymass/eosio'
+
+import {SigningRequest} from 'eosio-signing-request'
+
 import {SessionError} from './errors'
 import {Link, TransactArgs, TransactOptions, TransactResult} from './link'
 import {LinkTransport} from './link-transport'

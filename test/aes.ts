@@ -2,7 +2,7 @@ import * as assert from 'assert'
 import 'mocha'
 
 import {sealMessage} from '../src/utils'
-import {PrivateKey, UInt64} from 'eosio-core'
+import {PrivateKey, UInt64} from '@greymass/eosio'
 
 suite('aes', function () {
     test('seal message', function () {

@@ -1,20 +1,25 @@
+import zlib from 'pako'
+
 import {
+    ABIDef,
     ABISerializable,
     AnyAction,
     AnyTransaction,
     API,
+    APIClient,
     Bytes,
     Name,
     NameType,
+    PermissionLevel,
     PermissionLevelType,
     PrivateKey,
     PublicKey,
     Serializer,
     Signature,
     SignedTransaction,
-} from 'eosio-core'
-import zlib from 'pako'
-import {APIClient, PermissionLevel, Transaction} from 'eosio-core'
+    Transaction,
+} from '@greymass/eosio'
+
 import {
     AbiProvider,
     CallbackPayload,
@@ -126,8 +131,8 @@ export class Link implements AbiProvider {
 
     private callbackService: LinkCallbackService
     private requestOptions: SigningRequestEncodingOptions
-    private abiCache = new Map<string, any>()
-    private pendingAbis = new Map<string, Promise<any>>()
+    private abiCache = new Map<string, ABIDef>()
+    private pendingAbis = new Map<string, Promise<API.v1.GetAbiResponse>>()
 
     /** Create a new link instance. */
     constructor(options: LinkOptions) {
@@ -181,7 +186,7 @@ export class Link implements AbiProvider {
                 this.abiCache.set(key, rv)
             }
         }
-        return rv
+        return rv as ABIDef
     }
 
     /**

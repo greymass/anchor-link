@@ -3,7 +3,14 @@ import 'mocha'
 
 import {Link, LinkTransport} from '../src'
 import {CallbackPayload, SigningRequest} from 'eosio-signing-request'
-import {API, APIClient, APIProvider, PermissionLevel, PrivateKey, TimePointSec} from 'eosio-core'
+import {
+    API,
+    APIClient,
+    APIProvider,
+    PermissionLevel,
+    PrivateKey,
+    TimePointSec,
+} from '@greymass/eosio'
 import {LinkCallback, LinkCallbackService} from '../src/link-callback'
 import {readFileSync} from 'fs'
 import {join as pathJoin} from 'path'

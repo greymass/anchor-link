@@ -1,4 +1,4 @@
-import {APIClient} from 'eosio-core'
+import {APIClient} from '@greymass/eosio'
 import {ChainId, ChainName} from 'eosio-signing-request'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
@@ -18,7 +18,7 @@ export interface LinkOptions {
      */
     chainId?: ChainName | ChainId | string
     /**
-     * URL to EOSIO node to communicate with or a eosio-core APIClient instance.
+     * URL to EOSIO node to communicate with or a @greymass/eosio APIClient instance.
      * Defaults to https://eos.greymass.com
      */
     client?: string | APIClient
