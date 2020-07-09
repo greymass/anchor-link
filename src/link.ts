@@ -342,13 +342,14 @@ export class Link implements AbiProvider {
      * @param info Metadata to add to the request.
      * @note This is for advanced use-cases, you probably want to use [[Link.login]] instead.
      */
-    public async identify(
-        requestPermission?: PermissionLevelType,
+    public async identify(args: {
+        requestPermission?: PermissionLevelType
         info?: {[key: string]: ABISerializable | Bytes}
-    ): Promise<IdentifyResult> {
+        scope?: NameType
+    }): Promise<IdentifyResult> {
         const {request, callback} = await this.createRequest({
-            identity: {permission: requestPermission},
-            info,
+            identity: {permission: args.requestPermission, scope: args.scope},
+            info: args.info,
         })
         const res = await this.sendRequest(request, callback)
         if (!res.request.isIdentity()) {
@@ -380,8 +381,8 @@ export class Link implements AbiProvider {
         if (auth.threshold > keyAuth.weight) {
             throw new IdentityError(`${formatAuth(signer)} signature does not reach auth threshold`)
         }
-        if (requestPermission) {
-            const perm = PermissionLevel.from(requestPermission)
+        if (args.requestPermission) {
+            const perm = PermissionLevel.from(args.requestPermission)
             if (
                 (!perm.actor.equals(PlaceholderName) && !perm.actor.equals(signer.actor)) ||
                 (!perm.permission.equals(PlaceholderPermission) &&
@@ -413,8 +414,12 @@ export class Link implements AbiProvider {
             session_name: identifier,
             request_key: requestKey,
         })
-        const res = await this.identify(undefined, {
-            link: createInfo,
+        const res = await this.identify({
+            scope: identifier,
+            info: {
+                link: createInfo,
+                scope: identifier,
+            },
         })
         const metadata = {sameDevice: res.request.getRawInfo()['return_path'] !== undefined}
         let session: LinkSession
