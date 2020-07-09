@@ -1,4 +1,4 @@
-import {Bytes, Name, PublicKey, Struct, TimePointSec, UInt32, UInt64} from 'eosio-core'
+import {Bytes, Name, PublicKey, Struct, TimePointSec, UInt32, UInt64} from '@greymass/eosio'
 
 @Struct.type('sealed_message')
 export class SealedMessage extends Struct {

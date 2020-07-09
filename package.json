@@ -32,8 +32,8 @@
     ],
     "dependencies": {
         "asmcrypto.js": "^2.3.2",
-        "eosio-core": "0.0.2",
-        "eosio-signing-request": "^2.0.0-beta2",
+        "@greymass/eosio": "latest",
+        "eosio-signing-request": "next",
         "fetch-ponyfill": "^6.1.0",
         "isomorphic-ws": "^4.0.1",
         "pako": "^1.0.10",

@@ -1,5 +1,5 @@
 import makeFetch from 'fetch-ponyfill'
-import {Bytes, Checksum256, PrivateKey, PublicKey, Serializer, UInt64} from 'eosio-core'
+import {Bytes, Checksum256, PrivateKey, PublicKey, Serializer, UInt64} from '@greymass/eosio'
 import {SealedMessage} from './link-types'
 
 import {AES_CBC} from 'asmcrypto.js'
