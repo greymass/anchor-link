@@ -15,6 +15,8 @@ import {LinkCallback, LinkCallbackService} from '../src/link-callback'
 import {readFileSync} from 'fs'
 import {join as pathJoin} from 'path'
 
+const expiration = TimePointSec.fromMilliseconds(Date.now() + 60 * 1000)
+
 class TestManager implements LinkTransport, APIProvider, LinkCallbackService, LinkCallback {
     key = PrivateKey.generate('K1')
     signer = PermissionLevel.from({actor: 'foobar', permission: 'active'})
@@ -110,9 +112,9 @@ class TestManager implements LinkTransport, APIProvider, LinkCallbackService, Li
         }
         const abis = await request.fetchAbis()
         const resolved = request.resolve(abis, this.signer, {
-            timestamp: TimePointSec.fromMilliseconds(Date.now()),
-            block_num: 123456789,
-            ref_block_prefix: 123456,
+            expiration,
+            ref_block_num: 0,
+            ref_block_prefix: 0,
         })
         const digest = resolved.transaction.signingDigest(request.getChainId())
         const signature = this.key.signDigest(digest)
@@ -136,8 +138,11 @@ const link = new Link({client, transport: manager, service: manager})
 
 suite('session', function () {
     test('login & transact', async function () {
-        const {account, session} = await link.login('test')
+        const {account, session, transaction, resolvedTransaction} = await link.login('test')
         assert.equal(String(account.account_name), 'foobar')
+        assert.equal(String(transaction.expiration), expiration.toString())
+        assert.equal(String(resolvedTransaction.expiration), expiration.toString())
+        assert.equal(String(resolvedTransaction.actions[0].data.scope), 'test')
         await session.transact({
             action: {
                 account: 'eosio.token',
@@ -147,7 +152,7 @@ suite('session', function () {
                     from: session.auth.actor,
                     to: 'teamgreymass',
                     quantity: '100000.0000 EOS',
-                    memo: 'Blowjob',
+                    memo: 'lol',
                 },
             },
         })

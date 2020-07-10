@@ -33,7 +33,7 @@
     "dependencies": {
         "@greymass/eosio": "latest",
         "asmcrypto.js": "^2.3.2",
-        "eosio-signing-request": "next",
+        "eosio-signing-request": "^2.0.0-beta4",
         "fetch-ponyfill": "^6.1.0",
         "isomorphic-ws": "^4.0.1",
         "pako": "^1.0.10",
