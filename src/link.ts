@@ -361,7 +361,7 @@ export class Link implements AbiProvider {
 
         const {signer} = res
 
-        const account = await this.client.v1.chain.get_account(signer.actor.toString()) // TODO: get_account should accept NameType
+        const account = await this.client.v1.chain.get_account(signer.actor)
         if (!account) {
             throw new IdentityError(`Signature from unknown account: ${signer.actor}`)
         }
@@ -376,7 +376,9 @@ export class Link implements AbiProvider {
         const auth = permission.required_auth
         const keyAuth = auth.keys.find(({key}) => signerKey.equals(key))
         if (!keyAuth) {
-            throw new IdentityError(`${formatAuth(signer)} has no key matching id signature`)
+            throw new IdentityError(
+                `${formatAuth(signer)} has no key matching id signature (${signerKey})`
+            )
         }
         if (auth.threshold > keyAuth.weight) {
             throw new IdentityError(`${formatAuth(signer)} signature does not reach auth threshold`)
