@@ -2,6 +2,8 @@ import {v4 as uuid} from 'uuid'
 import {CallbackPayload} from 'eosio-signing-request'
 import WebSocket from 'isomorphic-ws'
 
+import {fetch} from './utils'
+
 /** Service that handles waiting for a ESR callback to be sent to an url. */
 export interface LinkCallbackService {
     create(): LinkCallback
@@ -35,7 +37,11 @@ class BuoyCallback implements LinkCallback {
     constructor(readonly url: string) {}
     private ctx: {cancel?: () => void} = {}
     wait() {
-        return waitForCallback(this.url, this.ctx)
+        if (this.url.includes('hyperbuoy')) {
+            return pollForCallback(this.url, this.ctx)
+        } else {
+            return waitForCallback(this.url, this.ctx)
+        }
     }
     cancel() {
         if (this.ctx.cancel) {
@@ -108,10 +114,50 @@ function waitForCallback(url: string, ctx: {cancel?: () => void}) {
 }
 
 /**
+ * Long-poll for message.
+ * @internal
+ */
+async function pollForCallback(url: string, ctx: {cancel?: () => void}): Promise<CallbackPayload> {
+    let active = true
+    ctx.cancel = () => {
+        active = false
+    }
+    while (active) {
+        try {
+            const res = await fetch(url)
+            if (res.status === 408) {
+                continue
+            } else if (res.status === 200) {
+                return await res.json()
+            } else {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+            }
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn('Unexpected hyperbuoy error', error)
+        }
+        await sleep(1000)
+    }
+    return new Promise<CallbackPayload>(() => {
+        // noop
+    })
+}
+
+/**
  * Exponential backoff function that caps off at 10s after 10 tries.
  * https://i.imgur.com/IrUDcJp.png
  * @internal
  */
 function backoff(tries: number): number {
     return Math.min(Math.pow(tries * 10, 2), 10 * 1000)
+}
+
+/**
+ * Return promise that resolves after given milliseconds.
+ * @internal
+ */
+function sleep(ms: number) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    })
 }
