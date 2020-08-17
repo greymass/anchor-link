@@ -1,5 +1,5 @@
 import {APIClient} from '@greymass/eosio'
-import {ChainId, ChainName} from 'eosio-signing-request'
+import {ChainIdType} from 'eosio-signing-request'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
 import {LinkCallbackService} from './link-callback'
@@ -16,7 +16,7 @@ export interface LinkOptions {
      * ChainID or esr chain name alias for which the link is valid.
      * Defaults to EOS (aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906).
      */
-    chainId?: ChainName | ChainId | string
+    chainId?: ChainIdType
     /**
      * URL to EOSIO node to communicate with or a @greymass/eosio APIClient instance.
      * Defaults to https://eos.greymass.com
