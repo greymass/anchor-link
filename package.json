@@ -31,9 +31,9 @@
         "src/*"
     ],
     "dependencies": {
-        "@greymass/eosio": "0.0.6",
+        "@greymass/eosio": "0.0.7",
         "asmcrypto.js": "^2.3.2",
-        "eosio-signing-request": "2.0.0-beta8",
+        "eosio-signing-request": "2.0.0-beta9",
         "fetch-ponyfill": "^6.1.0",
         "isomorphic-ws": "^4.0.1",
         "pako": "^1.0.10",
