@@ -241,7 +241,11 @@ export class Link implements AbiProvider {
                     }
                 })
             })
-            const payload = await Promise.race([callback.wait(), cancel])
+            const callbackResponse = await Promise.race([callback.wait(), cancel])
+            if (typeof callbackResponse.rejected === 'string') {
+                throw new CancelError(callbackResponse.rejected)
+            }
+            const payload = callbackResponse as CallbackPayload
             const signer = PermissionLevel.from({
                 actor: payload.sa,
                 permission: payload.sp,
