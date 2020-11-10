@@ -11,9 +11,10 @@ import {
     PrivateKey,
     TimePointSec,
 } from '@greymass/eosio'
-import {LinkCallback, LinkCallbackService} from '../src/link-callback'
+import {LinkCallback, LinkCallbackResponse, LinkCallbackService} from '../src/link-callback'
 import {readFileSync} from 'fs'
 import {join as pathJoin} from 'path'
+import {LinkCreate} from '../src/link-types'
 
 const expiration = TimePointSec.fromMilliseconds(Date.now() + 60 * 1000)
 
@@ -105,10 +106,14 @@ class TestManager implements LinkTransport, APIProvider, LinkCallbackService, Li
     create() {
         return this
     }
-    async wait(): Promise<CallbackPayload> {
+    async wait(): Promise<LinkCallbackResponse> {
         const request = this.lastRequest
         if (!request) {
             throw new Error('No request')
+        }
+        const info: LinkCreate | undefined = request.getInfoKey('link', LinkCreate)
+        if (info && String(info.session_name) === 'abort') {
+            return {rejected: 'no thanks'}
         }
         const abis = await request.fetchAbis()
         const resolved = request.resolve(abis, this.signer, {
@@ -156,5 +161,13 @@ suite('session', function () {
                 },
             },
         })
+    })
+    test('abort from wallet', async function () {
+        try {
+            await link.login('abort')
+            assert.fail()
+        } catch (error) {
+            assert.equal(error.message, 'User canceled request (no thanks)')
+        }
     })
 })

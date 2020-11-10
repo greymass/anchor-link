@@ -9,12 +9,21 @@ export interface LinkCallbackService {
     create(): LinkCallback
 }
 
+/** Can be returned by callback services if the user explicitly rejects the request. */
+export interface LinkCallbackRejection {
+    /** Rejection message. */
+    rejected: string
+}
+
+/** Callback response, can either be a ESR callback payload or a rejection message. */
+export type LinkCallbackResponse = CallbackPayload | LinkCallbackRejection
+
 /** Callback that can be waited for. */
 export interface LinkCallback {
     /** Url that should be hit to trigger the callback. */
     url: string
     /** Wait for the callback to resolve. */
-    wait(): Promise<CallbackPayload>
+    wait(): Promise<LinkCallbackResponse>
     /** Cancel a pending callback. */
     cancel(): void
 }
@@ -55,7 +64,7 @@ class BuoyCallback implements LinkCallback {
  * @internal
  */
 function waitForCallback(url: string, ctx: {cancel?: () => void}) {
-    return new Promise<CallbackPayload>((resolve, reject) => {
+    return new Promise<LinkCallbackResponse>((resolve, reject) => {
         let active = true
         let retries = 0
         const socketUrl = url.replace(/^http/, 'ws')
@@ -117,7 +126,10 @@ function waitForCallback(url: string, ctx: {cancel?: () => void}) {
  * Long-poll for message.
  * @internal
  */
-async function pollForCallback(url: string, ctx: {cancel?: () => void}): Promise<CallbackPayload> {
+async function pollForCallback(
+    url: string,
+    ctx: {cancel?: () => void}
+): Promise<LinkCallbackResponse> {
     let active = true
     ctx.cancel = () => {
         active = false
