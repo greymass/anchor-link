@@ -37,6 +37,19 @@ ci-test: node_modules
 ci-lint: node_modules
 	@eslint src --ext .ts --max-warnings 0 --format unix && echo "Ok"
 
+docs: $(SRC_FILES) node_modules
+	./node_modules/.bin/typedoc \
+		--mode file --stripInternal \
+		--excludeNotExported --excludePrivate --excludeProtected \
+		--name "Anchor Link" --readme none \
+		--out docs \
+		src/index.ts
+
+.PHONY: deploy-site
+deploy-site: docs
+	cp -r ./examples ./docs/examples/
+	./node_modules/.bin/gh-pages -d docs
+
 node_modules:
 	yarn install --non-interactive --frozen-lockfile --ignore-scripts
 
