@@ -2021,10 +2021,10 @@ entities@^2.0.0:
   resolved "https://registry.yarnpkg.com/entities/-/entities-2.1.0.tgz#992d3129cf7df6870b96c57858c249a120f8b8b5"
   integrity sha512-hCx1oky9PFrJ611mf0ifBLBRW8lUUVRlFolb5gWRfIELabBlbp9xZvrqZLZAs+NxFnbfQoeGd8wDkygjg7U85w==
 
-eosio-signing-request@2.0.0-beta10:
-  version "2.0.0-beta10"
-  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.0.0-beta10.tgz#192390c4843657e280bc8e53fc84f37932524ba8"
-  integrity sha512-M4i9Vb7iIK4/QOsBKF3BmSpBO/qr0zQ8IL2DXedhs7U184AzRn50nU5SMc8Tc0f0A+XsSWwZHM7QR5Tffl24Pw==
+eosio-signing-request@2.0.0-beta11:
+  version "2.0.0-beta11"
+  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.0.0-beta11.tgz#93e1b9a67780cac24e749e1d66237c72e84f6d3c"
+  integrity sha512-swbUUZZiOyJjIDQ90buX1fOJRWaO/LJ4ckd74VWmPcyIw1Y8yQbHPWsNOJ6IuN3B0yH1kz+8QmCRMC3aNRjPMQ==
   dependencies:
     "@greymass/eosio" "0.0.9"
 
