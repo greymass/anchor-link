@@ -1,6 +1,6 @@
 {
     "name": "anchor-link",
-    "version": "3.0.0-beta11",
+    "version": "3.0.0-beta12",
     "description": "Library for authenticating and signing transactions using the Anchor Link protocol",
     "license": "MIT",
     "main": "lib/index.js",
@@ -31,9 +31,9 @@
         "src/*"
     ],
     "dependencies": {
-        "@greymass/eosio": "0.0.7",
+        "@greymass/eosio": "0.0.9",
         "asmcrypto.js": "^2.3.2",
-        "eosio-signing-request": "2.0.0-beta9",
+        "eosio-signing-request": "2.0.0-beta10",
         "fetch-ponyfill": "^6.1.0",
         "isomorphic-ws": "^4.0.1",
         "pako": "^1.0.10",
