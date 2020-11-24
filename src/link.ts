@@ -255,10 +255,10 @@ export class Link implements AbiProvider {
                 .map((key) => Signature.from(payload[key]!))
             // recreate transaction from request response
             const resolved = await ResolvedSigningRequest.fromPayload(payload, this.requestOptions)
-            // TODO: use the signature type directly instead of the string now that its not a pain to do
-            const fuelSig = resolved.request.getInfoKey<string>('fuel_sig', 'string')
-            if (fuelSig) {
-                signatures.unshift(Signature.from(fuelSig))
+            // prepend cosigner signature if present
+            const cosignerSig = resolved.request.getInfoKey('cosig', Signature)
+            if (cosignerSig) {
+                signatures.unshift(cosignerSig)
             }
             const result: TransactResult = {
                 request: resolved.request,
