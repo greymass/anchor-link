@@ -441,7 +441,7 @@ export class Link {
         if (!res.request.isIdentity()) {
             throw new IdentityError(`Unexpected response`)
         }
-        const digest = res.transaction.signingDigest(request.getChainId())
+        const digest = res.transaction.signingDigest(res.chain.chainId)
         const signature = res.signatures[0]
         const signerKey = signature.recoverDigest(digest)
 
