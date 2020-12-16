@@ -211,6 +211,14 @@ export class Link {
     }
 
     /**
+     * The APIClient instance for communicating with the node.
+     * @note This returns the first APIClient when link is configured with multiple chains.
+     */
+    public get client() {
+        return this.chains[0].client
+    }
+
+    /**
      * Return a [[LinkChain]] object for given chainId or chain reference.
      * @throws If this link instance has no configured chain for given reference.
      * @internal
