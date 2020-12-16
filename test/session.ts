@@ -139,7 +139,16 @@ class TestManager implements LinkTransport, APIProvider, LinkCallbackService, Li
 
 const manager = new TestManager()
 const client = new APIClient({provider: manager})
-const link = new Link({client, transport: manager, service: manager})
+const link = new Link({
+    chains: [
+        {
+            nodeUrl: client,
+            chainId: 'beefface00000000000000000000000000000000000000000000000000000000',
+        },
+    ],
+    transport: manager,
+    service: manager,
+})
 
 suite('session', function () {
     test('login & transact', async function () {

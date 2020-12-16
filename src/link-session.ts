@@ -10,7 +10,7 @@ import {
     Serializer,
 } from '@greymass/eosio'
 
-import {SigningRequest} from 'eosio-signing-request'
+import {ChainId, ChainIdType, SigningRequest} from 'eosio-signing-request'
 
 import {SessionError} from './errors'
 import {Link, TransactArgs, TransactOptions, TransactResult} from './link'
@@ -27,6 +27,8 @@ export abstract class LinkSession {
     abstract link: Link
     /** App identifier that owns the session. */
     abstract identifier: Name
+    /** Id of the chain where the session is valid. */
+    abstract chainId: ChainId
     /** The public key the session can sign for. */
     abstract publicKey: PublicKey
     /** The EOSIO auth (a.k.a. permission level) the session can sign for. */
@@ -97,6 +99,8 @@ export interface LinkChannelSessionData {
     channel: ChannelInfo
     /** The private request key. */
     requestKey: PrivateKeyType
+    /** The session chain id. */
+    chainId: ChainIdType
 }
 
 /**
@@ -105,6 +109,7 @@ export interface LinkChannelSessionData {
  */
 export class LinkChannelSession extends LinkSession implements LinkTransport {
     readonly link: Link
+    readonly chainId: ChainId
     readonly auth: PermissionLevel
     readonly identifier: Name
     readonly type = 'channel'
@@ -118,6 +123,7 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
     constructor(link: Link, data: LinkChannelSessionData, metadata: any) {
         super()
         this.link = link
+        this.chainId = ChainId.from(data.chainId)
         this.auth = PermissionLevel.from(data.auth)
         this.publicKey = PublicKey.from(data.publicKey)
         this.channel = data.channel
@@ -200,11 +206,11 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
     }
 
     public makeSignatureProvider(): any {
-        return this.link.makeSignatureProvider([this.publicKey.toString()], this)
+        return this.link.makeSignatureProvider([this.publicKey.toString()], this.chainId, this)
     }
 
     transact(args: TransactArgs, options?: TransactOptions) {
-        return this.link.transact(args, options, this)
+        return this.link.transact(args, options, this.chainId, this)
     }
 }
 
@@ -213,6 +219,7 @@ export interface LinkFallbackSessionData {
     auth: PermissionLevelType
     publicKey: PublicKeyType
     identifier: NameType
+    chainId: ChainIdType
 }
 
 /**
@@ -221,6 +228,7 @@ export interface LinkFallbackSessionData {
  */
 export class LinkFallbackSession extends LinkSession implements LinkTransport {
     readonly link: Link
+    readonly chainId: ChainId
     readonly auth: PermissionLevel
     readonly type = 'fallback'
     readonly identifier: Name
@@ -233,6 +241,7 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
         this.link = link
         this.auth = PermissionLevel.from(data.auth)
         this.publicKey = PublicKey.from(data.publicKey)
+        this.chainId = ChainId.from(data.chainId)
         this.metadata = metadata || {}
         this.identifier = Name.from(data.identifier)
         this.serialize = () => ({
@@ -276,10 +285,10 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
     }
 
     public makeSignatureProvider(): any {
-        return this.link.makeSignatureProvider([this.publicKey.toString()], this)
+        return this.link.makeSignatureProvider([this.publicKey.toString()], this.chainId, this)
     }
 
     transact(args: TransactArgs, options?: TransactOptions) {
-        return this.link.transact(args, options, this)
+        return this.link.transact(args, options, this.chainId, this)
     }
 }
