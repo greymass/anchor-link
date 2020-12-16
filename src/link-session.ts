@@ -57,6 +57,10 @@ export abstract class LinkSession {
             await this.link.removeSession(this.identifier, this.auth)
         }
     }
+    /** API client for the chain this session is valid on. */
+    get client() {
+        return this.link.getChain(this.chainId).client
+    }
     /** Restore a previously serialized session. */
     static restore(link: Link, data: SerializedLinkSession): LinkSession {
         switch (data.type) {
