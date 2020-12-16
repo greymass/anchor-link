@@ -49,12 +49,12 @@ export abstract class LinkSession {
      * Convenience, remove this session from associated [[Link]] storage if set.
      * Equivalent to:
      * ```ts
-     * session.link.removeSession(session.identifier, session.auth)
+     * session.link.removeSession(session.identifier, session.auth, session.chainId)
      * ```
      */
     async remove() {
         if (this.link.storage) {
-            await this.link.removeSession(this.identifier, this.auth)
+            await this.link.removeSession(this.identifier, this.auth, this.chainId)
         }
     }
     /** API client for the chain this session is valid on. */

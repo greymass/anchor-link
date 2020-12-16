@@ -545,22 +545,41 @@ export class Link {
      * Restore previous session, see [[Link.login]] to create a new session.
      * @param identifier The session identifier, should be same as what was used when creating the session with [[Link.login]].
      * @param auth A specific session auth to restore, if omitted the most recently used session will be restored.
+     * @param chainId If given function will only consider that specific chain when restoring session.
      * @returns A [[LinkSession]] instance or null if no session can be found.
      * @throws If no [[LinkStorage]] adapter is configured or there was an error retrieving the session data.
      **/
-    public async restoreSession(identifier: string, auth?: PermissionLevel) {
+    public async restoreSession(
+        identifier: NameType,
+        auth?: PermissionLevelType,
+        chainId?: ChainIdType
+    ) {
         if (!this.storage) {
             throw new Error('Unable to restore session: No storage adapter configured')
         }
         let key: string
-        if (auth) {
-            key = this.sessionKey(identifier, formatAuth(auth))
+        if (auth && chainId) {
+            // both auth and chain id given, we can look up on specific key
+            key = this.sessionKey(
+                identifier,
+                formatAuth(PermissionLevel.from(auth)),
+                String(ChainId.from(chainId))
+            )
         } else {
-            const latest = (await this.listSessions(identifier))[0]
+            // otherwise we use the session list to filter down to most recently used matching given params
+            let list = await this.listSessions(identifier)
+            if (auth) {
+                list = list.filter((item) => item.auth.equals(auth))
+            }
+            if (chainId) {
+                const id = ChainId.from(chainId)
+                list = list.filter((item) => item.chainId.equals(id))
+            }
+            const latest = list[0]
             if (!latest) {
                 return null
             }
-            key = this.sessionKey(identifier, formatAuth(latest))
+            key = this.sessionKey(identifier, formatAuth(latest.auth), String(latest.chainId))
         }
         const data = await this.storage.read(key)
         if (!data) {
@@ -575,9 +594,9 @@ export class Link {
             )
         }
         const session = LinkSession.restore(this, sessionData)
-        if (auth) {
+        if (auth || chainId) {
             // update latest used
-            await this.touchSession(identifier, auth)
+            await this.touchSession(identifier, session.auth, session.chainId)
         }
         return session
     }
@@ -592,7 +611,7 @@ export class Link {
             throw new Error('Unable to list sessions: No storage adapter configured')
         }
         const key = this.sessionKey(identifier, 'list')
-        let list: PermissionLevel[]
+        let list: {auth: PermissionLevelType; chainId: ChainIdType}[]
         try {
             list = JSON.parse((await this.storage.read(key)) || '[]')
         } catch (error) {
@@ -600,20 +619,23 @@ export class Link {
                 `Unable to list sessions: Stored JSON invalid (${error.message || String(error)})`
             )
         }
-        return list
+        return list.map(({auth, chainId}) => ({
+            auth: PermissionLevel.from(auth),
+            chainId: ChainId.from(chainId),
+        }))
     }
 
     /**
      * Remove stored session for given identifier and auth.
      * @throws If no [[LinkStorage]] adapter is configured or there was an error removing the session data.
      */
-    public async removeSession(identifier: NameType, auth: PermissionLevel) {
+    public async removeSession(identifier: NameType, auth: PermissionLevel, chainId: ChainId) {
         if (!this.storage) {
             throw new Error('Unable to remove session: No storage adapter configured')
         }
-        const key = this.sessionKey(identifier, formatAuth(auth))
+        const key = this.sessionKey(identifier, formatAuth(auth), String(chainId))
         await this.storage.remove(key)
-        await this.touchSession(identifier, auth, true)
+        await this.touchSession(identifier, auth, chainId, true)
     }
 
     /**
@@ -624,8 +646,8 @@ export class Link {
         if (!this.storage) {
             throw new Error('Unable to clear sessions: No storage adapter configured')
         }
-        for (const auth of await this.listSessions(identifier)) {
-            await this.removeSession(identifier, auth)
+        for (const {auth, chainId} of await this.listSessions(identifier)) {
+            await this.removeSession(identifier, auth, chainId)
         }
     }
 
@@ -670,31 +692,37 @@ export class Link {
     }
 
     /** Makes sure session is in storage list of sessions and moves it to top (most recently used). */
-    private async touchSession(identifier: NameType, auth: PermissionLevel, remove = false) {
-        const auths = await this.listSessions(identifier)
-        const formattedAuth = formatAuth(auth)
-        const existing = auths.findIndex((a) => formatAuth(a) === formattedAuth)
+    private async touchSession(
+        identifier: NameType,
+        auth: PermissionLevel,
+        chainId: ChainId,
+        remove = false
+    ) {
+        const list = await this.listSessions(identifier)
+        const existing = list.findIndex(
+            (item) => item.auth.equals(auth) && item.chainId.equals(chainId)
+        )
         if (existing >= 0) {
-            auths.splice(existing, 1)
+            list.splice(existing, 1)
         }
         if (remove === false) {
-            auths.unshift(auth)
+            list.unshift({auth, chainId})
         }
         const key = this.sessionKey(identifier, 'list')
-        await this.storage!.write(key, JSON.stringify(auths))
+        await this.storage!.write(key, JSON.stringify(list))
     }
 
     /** Makes sure session is in storage list of sessions and moves it to top (most recently used). */
     private async storeSession(identifier: NameType, session: LinkSession) {
-        const key = this.sessionKey(identifier, formatAuth(session.auth))
+        const key = this.sessionKey(identifier, formatAuth(session.auth), String(session.chainId))
         const data = JSON.stringify(session.serialize())
         await this.storage!.write(key, data)
-        await this.touchSession(identifier, session.auth)
+        await this.touchSession(identifier, session.auth, session.chainId)
     }
 
     /** Session storage key for identifier and suffix. */
     private sessionKey(identifier: NameType, ...suffix: string[]) {
-        return [Name.from(identifier).toString(), ...suffix].join('-')
+        return [String(Name.from(identifier)), ...suffix].join('-')
     }
 }
 
