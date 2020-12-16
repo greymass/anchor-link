@@ -24,17 +24,17 @@ import {
     AbiProvider,
     CallbackPayload,
     ChainId,
+    ChainIdType,
     PlaceholderName,
     PlaceholderPermission,
     ResolvedSigningRequest,
     ResolvedTransaction,
     SigningRequest,
     SigningRequestCreateArguments,
-    SigningRequestEncodingOptions,
 } from 'eosio-signing-request'
 
 import {CancelError, IdentityError} from './errors'
-import {LinkOptions} from './link-options'
+import {LinkChainConfig, LinkOptions} from './link-options'
 import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
@@ -71,6 +71,8 @@ export interface TransactOptions {
 export interface TransactResult {
     /** The signing request that was sent. */
     request: SigningRequest
+    /** The chain that was used. */
+    chain: LinkChain
     /** The transaction signatures. */
     signatures: Signature[]
     /** The callback payload. */
@@ -104,67 +106,28 @@ export interface LoginResult extends IdentifyResult {
 }
 
 /**
- * Main class, also exposed as the default export of the library.
- *
- * Example:
- *
- * ```ts
- * import AnchorLink from 'anchor-link'
- * import ConsoleTransport from 'anchor-link-console-transport'
- *
- * const link = new AnchorLink({
- *     transport: new ConsoleTransport()
- * })
- *
- * const result = await link.transact({actions: myActions})
- * ```
+ * Link chain, can be a [[LinkChain]] instance, a chain id or a index in [[Link.chains]].
+ * @internal
  */
-export class Link implements AbiProvider {
-    /** The eosjs-core api client instance used to communicate with the EOSIO node. */
-    public readonly client: APIClient
-    /** Transport used to deliver requests to the user wallet. */
-    public readonly transport: LinkTransport
-    /** EOSIO ChainID for which requests are valid. */
-    public readonly chainId: ChainId
-    /** Storage adapter used to persist sessions. */
-    public readonly storage?: LinkStorage
+export type LinkChainType = LinkChain | ChainIdType | number
 
-    private callbackService: LinkCallbackService
-    private requestOptions: SigningRequestEncodingOptions
+/**
+ * Class representing a EOSIO chain.
+ * @internal
+ */
+class LinkChain implements AbiProvider {
+    /** EOSIO ChainID for which requests are valid. */
+    public chainId: ChainId
+    /** API client instance used to communicate with the chain. */
+    public client: APIClient
+
     private abiCache = new Map<string, ABIDef>()
     private pendingAbis = new Map<string, Promise<API.v1.GetAbiResponse>>()
 
-    /** Create a new link instance. */
-    constructor(options: LinkOptions) {
-        if (typeof options !== 'object') {
-            throw new TypeError('Missing options object')
-        }
-        if (!options.transport) {
-            throw new TypeError(
-                'options.transport is required, see https://github.com/greymass/anchor-link#transports'
-            )
-        }
-        if (options.client === undefined || typeof options.client === 'string') {
-            this.client = new APIClient({url: options.client || LinkOptions.defaults.client})
-        } else {
-            this.client = options.client
-        }
-        this.chainId = ChainId.from(options.chainId || LinkOptions.defaults.chainId)
-        if (options.service === undefined || typeof options.service === 'string') {
-            this.callbackService = new BuoyCallbackService(
-                options.service || LinkOptions.defaults.service
-            )
-        } else {
-            this.callbackService = options.service
-        }
-        this.transport = options.transport
-        if (options.storage !== null) {
-            this.storage = options.storage || this.transport.storage
-        }
-        this.requestOptions = {
-            abiProvider: this,
-            zlib,
-        }
+    constructor(chainId: ChainIdType, clientOrUrl: APIClient | string) {
+        this.chainId = ChainId.from(chainId)
+        this.client =
+            typeof clientOrUrl === 'string' ? new APIClient({url: clientOrUrl}) : clientOrUrl
     }
 
     /**
@@ -172,7 +135,7 @@ export class Link implements AbiProvider {
      * @internal
      */
     public async getAbi(account: Name) {
-        const key = account.toString()
+        const key = String(account)
         let rv = this.abiCache.get(key)
         if (!rv) {
             let getAbi = this.pendingAbis.get(key)
@@ -188,21 +151,123 @@ export class Link implements AbiProvider {
         }
         return rv as ABIDef
     }
+}
+
+/**
+ * Main class, also exposed as the default export of the library.
+ *
+ * Example:
+ *
+ * ```ts
+ * import AnchorLink from 'anchor-link'
+ * import ConsoleTransport from 'anchor-link-console-transport'
+ *
+ * const link = new AnchorLink({
+ *     chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+ *     client: 'https://eos.greymass.com',
+ *     transport: new ConsoleTransport()
+ * })
+ *
+ * const result = await link.transact({actions: myActions})
+ * ```
+ */
+export class Link {
+    /** The chain IDs and associated eosjs-core api clients this instance is configured with. */
+    public readonly chains: LinkChain[]
+    /** Transport used to deliver requests to the user wallet. */
+    public readonly transport: LinkTransport
+    /** Storage adapter used to persist sessions. */
+    public readonly storage?: LinkStorage
+
+    private callbackService: LinkCallbackService
+
+    /** Create a new link instance. */
+    constructor(options: LinkOptions) {
+        if (typeof options !== 'object') {
+            throw new TypeError('Missing options object')
+        }
+        if (!options.transport) {
+            throw new TypeError('options.transport is required')
+        }
+        let chains: LinkChainConfig[] = options.chains || []
+        if (options.chainId && options.client) {
+            chains = [{chainId: options.chainId, nodeUrl: options.client}]
+        }
+        if (chains.length === 0) {
+            throw new TypeError('options.chains is required')
+        }
+        this.chains = chains.map(({chainId, nodeUrl}) => new LinkChain(chainId, nodeUrl))
+        if (options.service === undefined || typeof options.service === 'string') {
+            this.callbackService = new BuoyCallbackService(
+                options.service || LinkOptions.defaults.service
+            )
+        } else {
+            this.callbackService = options.service
+        }
+        this.transport = options.transport
+        if (options.storage !== null) {
+            this.storage = options.storage || this.transport.storage
+        }
+    }
+
+    /**
+     * Return a [[LinkChain]] object for given chainId or chain reference.
+     * @throws If this link instance has no configured chain for given reference.
+     * @internal
+     */
+    public getChain(chain: LinkChainType) {
+        if (chain instanceof LinkChain) {
+            return chain
+        }
+        if (typeof chain === 'number') {
+            const rv = this.chains[chain]
+            if (!rv) {
+                throw new Error(`Invalid chain index: ${chain}`)
+            }
+            return rv
+        }
+        const id = ChainId.from(chain)
+        const rv = this.chains.find((c) => c.chainId.equals(id))
+        if (!rv) {
+            throw new Error(`No chain configured matching ${id}`)
+        }
+        return rv
+    }
 
     /**
      * Create a SigningRequest instance configured for this link.
      * @internal
      */
-    public async createRequest(args: SigningRequestCreateArguments, transport?: LinkTransport) {
+    public async createRequest(
+        args: SigningRequestCreateArguments,
+        chain?: LinkChain,
+        transport?: LinkTransport
+    ) {
         const t = transport || this.transport
-        let request = await SigningRequest.create(
-            {
-                ...args,
-                chainId: this.chainId.toString(),
-                broadcast: false,
-            },
-            this.requestOptions
-        )
+        let request: SigningRequest
+        if (chain || this.chains.length === 1) {
+            const c = chain || this.chains[0]
+            request = await SigningRequest.create(
+                {
+                    ...args,
+                    chainId: c.chainId,
+                    broadcast: false,
+                },
+                {abiProvider: c, zlib}
+            )
+        } else {
+            // multi-chain request
+            request = await SigningRequest.create(
+                {
+                    ...args,
+                    chainId: null,
+                    chainIds: this.chains.map((c) => c.chainId),
+                    broadcast: false,
+                },
+                // abi's will be pulled from the first chain and assumed to be identical on all chains
+                {abiProvider: this.chains[0], zlib}
+            )
+        }
         if (t.prepare) {
             request = await t.prepare(request)
         }
@@ -218,6 +283,7 @@ export class Link implements AbiProvider {
     public async sendRequest(
         request: SigningRequest,
         callback: LinkCallback,
+        chain?: LinkChain,
         transport?: LinkTransport,
         broadcast = false
     ) {
@@ -254,14 +320,19 @@ export class Link implements AbiProvider {
                 .filter((key) => key.startsWith('sig') && key !== 'sig0')
                 .map((key) => Signature.from(payload[key]!))
             // recreate transaction from request response
-            const resolved = await ResolvedSigningRequest.fromPayload(payload, this.requestOptions)
+            const resolved = await ResolvedSigningRequest.fromPayload(payload, {
+                zlib,
+                abiProvider: chain || this.chains[0],
+            })
             // prepend cosigner signature if present
             const cosignerSig = resolved.request.getInfoKey('cosig', Signature)
             if (cosignerSig) {
                 signatures.unshift(cosignerSig)
             }
+            const c = chain || this.getChain(resolved.chainId)
             const result: TransactResult = {
                 request: resolved.request,
+                chain: c,
                 transaction: resolved.transaction,
                 resolvedTransaction: resolved.resolvedTransaction,
                 signatures,
@@ -273,7 +344,7 @@ export class Link implements AbiProvider {
                     ...resolved.transaction,
                     signatures,
                 })
-                const res = await this.client.v1.chain.push_transaction(signedTx)
+                const res = await c.client.v1.chain.push_transaction(signedTx)
                 result.processed = res.processed
             }
             if (t.onSuccess) {
@@ -299,14 +370,17 @@ export class Link implements AbiProvider {
      *
      * @param args The action, actions or transaction to use.
      * @param options Options for this transact call.
+     * @param chain Chain to use when configured with multiple chains.
      * @param transport Transport override, for internal use.
      */
     public async transact(
         args: TransactArgs,
         options?: TransactOptions,
+        chain?: LinkChainType,
         transport?: LinkTransport
     ): Promise<TransactResult> {
         const t = transport || this.transport
+        const c = chain ? this.getChain(chain) : undefined
         const broadcast = options ? options.broadcast !== false : true
         // Initialize the loading state of the transport
         if (t && t.showLoading) {
@@ -335,8 +409,8 @@ export class Link implements AbiProvider {
                 },
             }
         }
-        const {request, callback} = await this.createRequest(args, t)
-        const result = await this.sendRequest(request, callback, t, broadcast)
+        const {request, callback} = await this.createRequest(args, c, t)
+        const result = await this.sendRequest(request, callback, c, t, broadcast)
         return result
     }
 
@@ -363,9 +437,9 @@ export class Link implements AbiProvider {
         const signature = res.signatures[0]
         const signerKey = signature.recoverDigest(digest)
 
-        const {signer} = res
+        const {signer, chain} = res
 
-        const account = await this.client.v1.chain.get_account(signer.actor)
+        const account = await chain.client.v1.chain.get_account(signer.actor)
         if (!account) {
             throw new IdentityError(`Signature from unknown account: ${signer.actor}`)
         }
@@ -434,6 +508,7 @@ export class Link implements AbiProvider {
                 this,
                 {
                     identifier,
+                    chainId: res.chain.chainId,
                     auth: res.signer,
                     publicKey: res.signerKey,
                     channel: {
@@ -450,6 +525,7 @@ export class Link implements AbiProvider {
                 this,
                 {
                     identifier,
+                    chainId: res.chain.chainId,
                     auth: res.signer,
                     publicKey: res.signerKey,
                 },
@@ -556,19 +632,25 @@ export class Link implements AbiProvider {
     /**
      * Create an eosjs compatible signature provider using this link.
      * @param availableKeys Keys the created provider will claim to be able to sign for.
+     * @param chain Chain to use when configured with multiple chains.
      * @param transport (internal) Transport override for this call.
      * @note We don't know what keys are available so those have to be provided,
      *       to avoid this use [[LinkSession.makeSignatureProvider]] instead. Sessions can be created with [[Link.login]].
      */
-    public makeSignatureProvider(availableKeys: string[], transport?: LinkTransport): any {
+    public makeSignatureProvider(
+        availableKeys: string[],
+        chain?: LinkChainType,
+        transport?: LinkTransport
+    ): any {
         return {
             getAvailableKeys: async () => availableKeys,
             sign: async (args) => {
                 const t = transport || this.transport
+                const c = chain ? this.getChain(chain) : this.chains[0]
                 let request = SigningRequest.fromTransaction(
                     args.chainId,
                     args.serializedTransaction,
-                    this.requestOptions
+                    {abiProvider: c, zlib}
                 )
                 const callback = this.callbackService.create()
                 request.setCallback(callback.url, true)
@@ -576,7 +658,7 @@ export class Link implements AbiProvider {
                 if (t.prepare) {
                     request = await t.prepare(request)
                 }
-                const {transaction, signatures} = await this.sendRequest(request, callback, t)
+                const {transaction, signatures} = await this.sendRequest(request, callback, c, t)
                 const serializedTransaction = Serializer.encode({object: transaction})
                 return {
                     ...args,
@@ -611,8 +693,8 @@ export class Link implements AbiProvider {
     }
 
     /** Session storage key for identifier and suffix. */
-    private sessionKey(identifier: NameType, suffix: string) {
-        return [this.chainId.toString(), Name.from(identifier).toString(), suffix].join('-')
+    private sessionKey(identifier: NameType, ...suffix: string[]) {
+        return [Name.from(identifier).toString(), ...suffix].join('-')
     }
 }
 
