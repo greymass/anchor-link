@@ -333,9 +333,12 @@ export class Link {
                 abiProvider: chain || this.chains[0],
             })
             // prepend cosigner signature if present
-            const cosignerSig = resolved.request.getInfoKey('cosig', Signature)
+            const cosignerSig = resolved.request.getInfoKey('cosig', {
+                type: Signature,
+                array: true,
+            }) as Signature[] | undefined
             if (cosignerSig) {
-                signatures.unshift(cosignerSig)
+                signatures.unshift(...cosignerSig)
             }
             const c = chain || this.getChain(resolved.chainId)
             const result: TransactResult = {
