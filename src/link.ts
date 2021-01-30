@@ -13,7 +13,6 @@ import {
     PermissionLevel,
     PermissionLevelType,
     PrivateKey,
-    PublicKey,
     Serializer,
     Signature,
     SignedTransaction,
@@ -25,6 +24,7 @@ import {
     CallbackPayload,
     ChainId,
     ChainIdType,
+    IdentityProof,
     PlaceholderName,
     PlaceholderPermission,
     ResolvedSigningRequest,
@@ -69,8 +69,8 @@ export interface TransactOptions {
  * The result of a [[Link.transact]] call.
  */
 export interface TransactResult {
-    /** The signing request that was sent. */
-    request: SigningRequest
+    /** The resolved signing request. */
+    resolved: ResolvedSigningRequest
     /** The chain that was used. */
     chain: LinkChain
     /** The transaction signatures. */
@@ -81,7 +81,7 @@ export interface TransactResult {
     signer: PermissionLevel
     /** The resulting transaction. */
     transaction: Transaction
-    /** Resolved version of transaction. */
+    /** Resolved version of transaction, with the action data decoded. */
     resolvedTransaction: ResolvedTransaction
     /** Push transaction response from api node, only present if transaction was broadcast. */
     processed?: {[key: string]: any}
@@ -91,10 +91,10 @@ export interface TransactResult {
  * The result of a [[Link.identify]] call.
  */
 export interface IdentifyResult extends TransactResult {
-    /** The identified account. */
-    account: API.v1.AccountObject
-    /** The public key that signed the identity proof.  */
-    signerKey: PublicKey
+    /** The identified account, not present if [[LinkOptions.verifyProofs]] is set to false. */
+    account?: API.v1.AccountObject
+    /** The identity proof. */
+    proof: IdentityProof
 }
 
 /**
@@ -180,6 +180,7 @@ export class Link {
     public readonly storage?: LinkStorage
 
     private callbackService: LinkCallbackService
+    private verifyProofs: boolean
 
     /** Create a new link instance. */
     constructor(options: LinkOptions) {
@@ -208,6 +209,7 @@ export class Link {
         if (options.storage !== null) {
             this.storage = options.storage || this.transport.storage
         }
+        this.verifyProofs = options.verifyProofs !== undefined ? options.verifyProofs : true
     }
 
     /**
@@ -342,7 +344,7 @@ export class Link {
             }
             const c = chain || this.getChain(resolved.chainId)
             const result: TransactResult = {
-                request: resolved.request,
+                resolved,
                 chain: c,
                 transaction: resolved.transaction,
                 resolvedTransaction: resolved.resolvedTransaction,
@@ -432,64 +434,59 @@ export class Link {
      * @note This is for advanced use-cases, you probably want to use [[Link.login]] instead.
      */
     public async identify(args: {
+        scope: NameType
         requestPermission?: PermissionLevelType
         info?: {[key: string]: ABISerializable | Bytes}
-        scope?: NameType
     }): Promise<IdentifyResult> {
         const {request, callback} = await this.createRequest({
             identity: {permission: args.requestPermission, scope: args.scope},
             info: args.info,
         })
         const res = await this.sendRequest(request, callback)
-        if (!res.request.isIdentity()) {
-            throw new IdentityError(`Unexpected response`)
+        if (!res.resolved.request.isIdentity()) {
+            throw new IdentityError('Unexpected response')
         }
-        const digest = res.transaction.signingDigest(res.chain.chainId)
-        const signature = res.signatures[0]
-        const signerKey = signature.recoverDigest(digest)
 
-        const {signer, chain} = res
+        let account: API.v1.AccountObject | undefined
+        const proof = res.resolved.getIdentityProof(res.signatures[0])
+        if (this.verifyProofs) {
+            account = await res.chain.client.v1.chain.get_account(res.signer.actor)
+            if (!account) {
+                throw new IdentityError(`Signature from unknown account: ${proof.signer.actor}`)
+            }
+            const accountPermission = account.permissions.find(({perm_name}) =>
+                proof.signer.permission.equals(perm_name)
+            )
+            if (!accountPermission) {
+                throw new IdentityError(
+                    `${proof.signer.actor} signed for unknown permission: ${proof.signer.permission}`
+                )
+            }
+            const proofValid = proof.verify(
+                accountPermission.required_auth,
+                account.head_block_time
+            )
+            if (!proofValid) {
+                throw new IdentityError(`Invalid identify proof for: ${proof.signer}`)
+            }
+        }
 
-        const account = await chain.client.v1.chain.get_account(signer.actor)
-        if (!account) {
-            throw new IdentityError(`Signature from unknown account: ${signer.actor}`)
-        }
-        const permission = account.permissions.find(({perm_name}) =>
-            signer.permission.equals(perm_name)
-        )
-        if (!permission) {
-            throw new IdentityError(
-                `${signer.actor} signed for unknown permission: ${signer.permission}`
-            )
-        }
-        const auth = permission.required_auth
-        const keyAuth = auth.keys.find(({key}) => signerKey.equals(key))
-        if (!keyAuth) {
-            throw new IdentityError(
-                `${formatAuth(signer)} has no key matching id signature (${signerKey})`
-            )
-        }
-        if (auth.threshold > keyAuth.weight) {
-            throw new IdentityError(`${formatAuth(signer)} signature does not reach auth threshold`)
-        }
         if (args.requestPermission) {
             const perm = PermissionLevel.from(args.requestPermission)
             if (
-                (!perm.actor.equals(PlaceholderName) && !perm.actor.equals(signer.actor)) ||
+                (!perm.actor.equals(PlaceholderName) && !perm.actor.equals(proof.signer.actor)) ||
                 (!perm.permission.equals(PlaceholderPermission) &&
-                    !perm.permission.equals(signer.permission))
+                    !perm.permission.equals(proof.signer.permission))
             ) {
                 throw new IdentityError(
-                    `Unexpected identity proof from ${formatAuth(signer)}, expected ${formatAuth(
-                        perm
-                    )} `
+                    `Identity proof singed by ${proof.signer}, expected: ${formatAuth(perm)} `
                 )
             }
         }
         return {
             ...res,
             account,
-            signerKey,
+            proof,
         }
     }
 
@@ -512,7 +509,10 @@ export class Link {
                 scope: identifier,
             },
         })
-        const metadata = {sameDevice: res.request.getRawInfo()['return_path'] !== undefined}
+        const metadata = {
+            sameDevice: res.resolved.request.getRawInfo()['return_path'] !== undefined,
+        }
+        const signerKey = res.proof.recover()
         let session: LinkSession
         if (res.payload.link_ch && res.payload.link_key && res.payload.link_name) {
             session = new LinkChannelSession(
@@ -521,7 +521,7 @@ export class Link {
                     identifier,
                     chainId: res.chain.chainId,
                     auth: res.signer,
-                    publicKey: res.signerKey,
+                    publicKey: signerKey,
                     channel: {
                         url: res.payload.link_ch,
                         key: res.payload.link_key,
@@ -538,7 +538,7 @@ export class Link {
                     identifier,
                     chainId: res.chain.chainId,
                     auth: res.signer,
-                    publicKey: res.signerKey,
+                    publicKey: signerKey,
                 },
                 metadata
             )

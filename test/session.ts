@@ -2,7 +2,7 @@ import {strict as assert} from 'assert'
 import 'mocha'
 
 import {Link, LinkTransport} from '../src'
-import {CallbackPayload, SigningRequest} from 'eosio-signing-request'
+import {SigningRequest} from 'eosio-signing-request'
 import {
     API,
     APIClient,
@@ -153,7 +153,7 @@ const link = new Link({
 suite('session', function () {
     test('login & transact', async function () {
         const {account, session, transaction, resolvedTransaction} = await link.login('test')
-        assert.equal(String(account.account_name), 'foobar')
+        assert.equal(String(account!.account_name), 'foobar')
         assert.equal(String(transaction.expiration), expiration.toString())
         assert.equal(String(resolvedTransaction.expiration), expiration.toString())
         assert.equal(String(resolvedTransaction.actions[0].data.scope), 'test')
