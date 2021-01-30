@@ -51,6 +51,11 @@ export interface LinkOptions {
      * Explicitly set this to `null` to force no storage.
      */
     storage?: LinkStorage | null
+    /**
+     * Whether to verify identity proofs submitted by the signer, default is true.
+     * @note If this is disabled the login and identify methods will not return an account object.
+     */
+    verifyProofs?: boolean
 }
 
 export namespace LinkOptions {
