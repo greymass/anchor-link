@@ -6,6 +6,7 @@ import {LinkStorage} from './link-storage'
 
 /**
  * Protocol link transports need to implement.
+ *
  * A transport is responsible for getting the request to the
  * user, e.g. by opening request URIs or displaying QR codes.
  */

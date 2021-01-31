@@ -1,8 +1,16 @@
 import makeFetch from 'fetch-ponyfill'
-import {Bytes, Checksum256, Checksum512, PrivateKey, PublicKey, Serializer, UInt64} from '@greymass/eosio'
-import {SealedMessage} from './link-types'
-
 import {AES_CBC} from 'asmcrypto.js'
+import {
+    Bytes,
+    Checksum256,
+    Checksum512,
+    PrivateKey,
+    PublicKey,
+    Serializer,
+    UInt64,
+} from '@greymass/eosio'
+
+import {SealedMessage} from './link-types'
 
 /** @internal */
 export const fetch = makeFetch().fetch

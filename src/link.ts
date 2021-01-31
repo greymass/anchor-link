@@ -113,9 +113,8 @@ export type LinkChainType = LinkChain | ChainIdType | number
 
 /**
  * Class representing a EOSIO chain.
- * @internal
  */
-class LinkChain implements AbiProvider {
+export class LinkChain implements AbiProvider {
     /** EOSIO ChainID for which requests are valid. */
     public chainId: ChainId
     /** API client instance used to communicate with the chain. */
@@ -124,6 +123,7 @@ class LinkChain implements AbiProvider {
     private abiCache = new Map<string, ABIDef>()
     private pendingAbis = new Map<string, Promise<API.v1.GetAbiResponse>>()
 
+    /** @internal */
     constructor(chainId: ChainIdType, clientOrUrl: APIClient | string) {
         this.chainId = ChainId.from(chainId)
         this.client =
@@ -154,27 +154,31 @@ class LinkChain implements AbiProvider {
 }
 
 /**
- * Main class, also exposed as the default export of the library.
+ * Anchor Link main class.
  *
- * Example:
+ * @example
  *
  * ```ts
  * import AnchorLink from 'anchor-link'
  * import ConsoleTransport from 'anchor-link-console-transport'
  *
  * const link = new AnchorLink({
- *     chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
- *     client: 'https://eos.greymass.com',
- *     transport: new ConsoleTransport()
+ *     transport: new ConsoleTransport(),
+ *     chains: [
+ *         {
+ *             chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+ *             nodeUrl: 'https://eos.greymass.com',
+ *         },
+ *     ],
  * })
  *
  * const result = await link.transact({actions: myActions})
  * ```
  */
 export class Link {
-    /** The chain IDs and associated eosjs-core api clients this instance is configured with. */
+    /** Chains this instance is configured with. */
     public readonly chains: LinkChain[]
-    /** Transport used to deliver requests to the user wallet. */
+    /** Transport used to deliver requests to the users wallet. */
     public readonly transport: LinkTransport
     /** Storage adapter used to persist sessions. */
     public readonly storage?: LinkStorage
@@ -443,9 +447,10 @@ export class Link {
     }
 
     /**
-     * Send an identity request and verify the identity proof.
-     * @param requestPermission Optional request permission if the request is for a specific account or permission.
-     * @param info Metadata to add to the request.
+     * Send an identity request and verify the identity proof if [[LinkOptions.verifyProofs]] is true.
+     * @param args.scope The scope of the identity request.
+     * @param args.requestPermission Optional request permission if the request is for a specific account or permission.
+     * @param args.info Metadata to add to the request.
      * @note This is for advanced use-cases, you probably want to use [[Link.login]] instead.
      */
     public async identify(args: {
@@ -568,8 +573,8 @@ export class Link {
     }
 
     /**
-     * Restore previous session, see [[Link.login]] to create a new session.
-     * @param identifier The session identifier, should be same as what was used when creating the session with [[Link.login]].
+     * Restore previous session, use [[login]] to create a new session.
+     * @param identifier The session identifier, must be same as what was used when creating the session with [[login]].
      * @param auth A specific session auth to restore, if omitted the most recently used session will be restored.
      * @param chainId If given function will only consider that specific chain when restoring session.
      * @returns A [[LinkSession]] instance or null if no session can be found.
@@ -641,9 +646,7 @@ export class Link {
         try {
             list = JSON.parse((await this.storage.read(key)) || '[]')
         } catch (error) {
-            throw new Error(
-                `Unable to list sessions: Stored JSON invalid (${error.message || String(error)})`
-            )
+            throw new Error(`Unable to list sessions: ${error.message || String(error)}`)
         }
         return list.map(({auth, chainId}) => ({
             auth: PermissionLevel.from(auth),

@@ -25,11 +25,11 @@ ci-lint: node_modules
 
 docs: $(SRC_FILES) node_modules
 	./node_modules/.bin/typedoc \
-		--mode file --stripInternal \
-		--excludeNotExported --excludePrivate --excludeProtected \
-		--name "Anchor Link" --readme none \
+		--excludeInternal \
+		--excludePrivate --excludeProtected \
+		--name "Anchor Link" --includeVersion --readme none \
 		--out docs \
-		src/index.ts
+		src/index-module.ts
 
 .PHONY: deploy-site
 deploy-site: docs
@@ -41,7 +41,7 @@ node_modules:
 
 .PHONY: clean
 clean:
-	rm -rf lib/ coverage/
+	rm -rf lib/ coverage/ docs/
 
 .PHONY: distclean
 distclean: clean

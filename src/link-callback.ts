@@ -150,9 +150,7 @@ async function pollForCallback(
         }
         await sleep(1000)
     }
-    return new Promise<CallbackPayload>(() => {
-        // noop
-    })
+    return (null as unknown) as CallbackPayload
 }
 
 /**

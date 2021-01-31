@@ -1,12 +1,8 @@
-export * from './link'
-export * from './link-session'
-export type {LinkOptions} from './link-options'
-export type {LinkTransport} from './link-transport'
-export type {LinkStorage} from './link-storage'
-export * from './errors'
+// export library
+export * from './index-module'
 
 // default export is Link class for convenience
-import {Link} from './link'
+import {Link} from './index-module'
 export default Link
 
 // expose dependencies
