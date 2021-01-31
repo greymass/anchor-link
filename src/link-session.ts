@@ -23,6 +23,8 @@ import {fetch, sealMessage} from './utils'
  * signature provider and transact for a specific auth.
  */
 export abstract class LinkSession {
+    /** @internal */
+    constructor() {} // eslint-disable-line @typescript-eslint/no-empty-function
     /** The underlying link instance used by the session. */
     abstract link: Link
     /** App identifier that owns the session. */
