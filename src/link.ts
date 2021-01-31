@@ -181,6 +181,7 @@ export class Link {
 
     private callbackService: LinkCallbackService
     private verifyProofs: boolean
+    private encodeChainIds: boolean
 
     /** Create a new link instance. */
     constructor(options: LinkOptions) {
@@ -210,6 +211,7 @@ export class Link {
             this.storage = options.storage || this.transport.storage
         }
         this.verifyProofs = options.verifyProofs !== undefined ? options.verifyProofs : true
+        this.encodeChainIds = options.encodeChainIds !== undefined ? options.encodeChainIds : true
     }
 
     /**
@@ -239,7 +241,7 @@ export class Link {
         const id = ChainId.from(chain)
         const rv = this.chains.find((c) => c.chainId.equals(id))
         if (!rv) {
-            throw new Error(`No chain configured matching ${id}`)
+            throw new Error(`Unsupported chain: ${id}`)
         }
         return rv
     }
@@ -271,7 +273,7 @@ export class Link {
                 {
                     ...args,
                     chainId: null,
-                    chainIds: this.chains.map((c) => c.chainId),
+                    chainIds: this.encodeChainIds ? this.chains.map((c) => c.chainId) : undefined,
                     broadcast: false,
                 },
                 // abi's will be pulled from the first chain and assumed to be identical on all chains
@@ -329,10 +331,24 @@ export class Link {
             const signatures: Signature[] = Object.keys(payload)
                 .filter((key) => key.startsWith('sig') && key !== 'sig0')
                 .map((key) => Signature.from(payload[key]!))
+            let c: LinkChain
+            if (!chain && this.chains.length > 1) {
+                if (!payload.cid) {
+                    throw new Error(
+                        'Multi chain response payload must specify resolved chain id (cid)'
+                    )
+                }
+                c = this.getChain(payload.cid)
+            } else {
+                c = chain || this.getChain(0)
+                if (payload.cid && !c.chainId.equals(payload.cid)) {
+                    throw new Error('Got response for wrong chain id')
+                }
+            }
             // recreate transaction from request response
             const resolved = await ResolvedSigningRequest.fromPayload(payload, {
                 zlib,
-                abiProvider: chain || this.chains[0],
+                abiProvider: c,
             })
             // prepend cosigner signature if present
             const cosignerSig = resolved.request.getInfoKey('cosig', {
@@ -342,7 +358,6 @@ export class Link {
             if (cosignerSig) {
                 signatures.unshift(...cosignerSig)
             }
-            const c = chain || this.getChain(resolved.chainId)
             const result: TransactResult = {
                 resolved,
                 chain: c,

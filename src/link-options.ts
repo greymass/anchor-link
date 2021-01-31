@@ -56,6 +56,12 @@ export interface LinkOptions {
      * @note If this is disabled the login and identify methods will not return an account object.
      */
     verifyProofs?: boolean
+    /**
+     * Whether to encode the chain ids with the identity request that establishes a session.
+     * Only applicable when using multiple chain configurations, defaults to true.
+     * Can be set to false to decrease QR code sizes when supporting many chains.
+     */
+    encodeChainIds?: boolean
 }
 
 export namespace LinkOptions {
