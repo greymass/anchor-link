@@ -16,6 +16,7 @@ import {readFileSync} from 'fs'
 import {join as pathJoin} from 'path'
 import {LinkCreate} from '../src/link-types'
 
+const now = TimePointSec.fromMilliseconds(Date.now())
 const expiration = TimePointSec.fromMilliseconds(Date.now() + 60 * 1000)
 
 class TestManager implements LinkTransport, APIProvider, LinkCallbackService, LinkCallback {
@@ -24,7 +25,7 @@ class TestManager implements LinkTransport, APIProvider, LinkCallbackService, Li
     account = API.v1.AccountObject.from({
         account_name: this.signer.actor,
         head_block_num: 123456789,
-        head_block_time: '2020-02-02T02:20:20.000',
+        head_block_time: now,
         privileged: false,
         last_code_update: '1970-01-01T00:00:00.000',
         created: '2001-01-01T00:00:00.000',
