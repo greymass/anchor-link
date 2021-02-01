@@ -10,9 +10,12 @@
         // initialize the browser transport
         const transport = new AnchorLinkBrowserTransport()
         // initialize the link, this time we are using the TELOS chain
-        const link = new AnchorLink({transport,
-            chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11',
-            rpc: 'https://telos.greymass.com'
+        const link = new AnchorLink({
+            transport,
+            chains: [{
+                chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11',
+                nodeUrl: 'https://telos.greymass.com'
+            }]
         })
         // the EOSIO action we want to sign and broadcast
         const action = {
