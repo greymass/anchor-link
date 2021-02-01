@@ -12,7 +12,13 @@
         // initialize the browser transport
         const transport = new AnchorLinkBrowserTransport()
         // initialize the link
-        const link = new AnchorLink({transport})
+        const link = new AnchorLink({
+            transport,
+            chains: [{
+                chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
+                nodeUrl: 'https://eos.greymass.com',
+            }]
+        })
         // the session instance, either restored using link.restoreSession() or created with link.login()
         let session
 
@@ -66,7 +72,7 @@
 
         // ¯\_(ツ)_/¯
         window.addEventListener('keypress', (event) => {
-            if (event.key === 'F' || event.key === 'f') {
+            if (session && (event.key === 'F' || event.key === 'f')) {
                 transfer()
             }
         })
