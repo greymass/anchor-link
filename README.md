@@ -63,7 +63,7 @@ const AnchorLink = require('anchor-link')
 const AnchorLinkConsoleTransport = require('anchor-link-console-transport')
 ```
 
-## Basic usage
+## Usage
 
 First you need to instantiate your transport and the link.
 
@@ -82,7 +82,30 @@ const link = new AnchorLink({
 
 Now you have a link instance that can be used in the browser to login and/or transact. See [options](https://greymass.github.io/anchor-link/interfaces/linkoptions.html) for a full list of available options.
 
-### Basic transact
+### Login and transact
+
+To create a persistent session where you can push multiple transaction to a users wallet you need to call the [login](https://greymass.github.io/anchor-link/classes/link.html#login) method on your link instance.
+
+```ts
+link.login('mydapp').then(({session}) => {
+    console.log(`Logged in as ${session.auth}`)
+    const action = {
+        account: 'eosio',
+        name: 'voteproducer',
+        authorization: [session.auth],
+        data: {
+            voter: session.auth.actor,
+            proxy: 'greymassvote',
+            producers: [],
+        },
+    }
+    session.transact({action}).then(({transaction}) => {
+        console.log(`Transaction broadcast! Id: ${transaction.id}`)
+    })
+})
+```
+
+### One-shot transact
 
 To sign action(s) or a transaction using the link without logging in you can call the [transact](https://greymass.github.io/anchor-link/classes/link.html#transact) method on your link instance.
 
@@ -106,29 +129,6 @@ link.transact({action}).then(({signer, transaction}) => {
     console.log(
         `Success! Transaction signed by ${signer} and bradcast with transaction id: ${transaction.id}`
     )
-})
-```
-
-### Transact with a session
-
-To create a persistent session where you can push multiple transaction to a users wallet you need to call the [login](https://greymass.github.io/anchor-link/classes/link.html#login) method on your link instance.
-
-```ts
-link.login('mydapp').then(({session}) => {
-    console.log(`Logged in as ${session.auth}`)
-    const action = {
-        account: 'eosio',
-        name: 'voteproducer',
-        authorization: [session.auth],
-        data: {
-            voter: session.auth.actor,
-            proxy: 'greymassvote',
-            producers: [],
-        },
-    }
-    session.transact({action}).then(({transaction}) => {
-        console.log(`Transaction broadcast! Id: ${transaction.id}`)
-    })
 })
 ```
 
