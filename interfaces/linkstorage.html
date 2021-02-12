@@ -3,10 +3,11 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>LinkStorage | Anchor Link</title>
-	<meta name="description" content="Documentation for Anchor Link">
+	<title>LinkStorage | Anchor Link - v3.0.0</title>
+	<meta name="description" content="Documentation for Anchor Link - v3.0.0">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
 </head>
 <body>
 <header>
@@ -22,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">Anchor Link</a>
+					<a href="../index.html" class="title">Anchor Link - v3.0.0</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -51,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../index.html">Globals</a>
+					<a href="../index.html">Anchor Link - v3.0.0</a>
 				</li>
 				<li>
 					<a href="linkstorage.html">LinkStorage</a>
@@ -69,7 +70,7 @@
 					<div class="lead">
 						<p>Interface storage adapters should implement.</p>
 					</div>
-					<p>Storage adapters are responsible for persisting <a href="../classes/linksession.html">LinkSession</a>&#39;s and can optionally be
+					<p>Storage adapters are responsible for persisting <a href="../classes/linksession.html">LinkSession</a>s and can optionally be
 					passed to the <a href="../classes/link.html">Link</a> constructor to auto-persist sessions.</p>
 				</div>
 			</section>
@@ -85,30 +86,30 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section tsd-is-external">
+						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-external"><a href="linkstorage.html#read" class="tsd-kind-icon">read</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-external"><a href="linkstorage.html#remove" class="tsd-kind-icon">remove</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-external"><a href="linkstorage.html#write" class="tsd-kind-icon">write</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="linkstorage.html#read" class="tsd-kind-icon">read</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="linkstorage.html#remove" class="tsd-kind-icon">remove</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="linkstorage.html#write" class="tsd-kind-icon">write</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-external">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
 					<a name="read" class="tsd-anchor"></a>
 					<h3>read</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-external">
-						<li class="tsd-signature tsd-kind-icon">read<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></li>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">read<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4b6220e/src/link-storage.ts#L11">src/link-storage.ts:11</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/5b5a998/src/link-storage.ts#L11">src/link-storage.ts:11</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -122,21 +123,21 @@
 									<h5>key: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
 					<a name="remove" class="tsd-anchor"></a>
 					<h3>remove</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
 						<li class="tsd-signature tsd-kind-icon">remove<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4b6220e/src/link-storage.ts#L13">src/link-storage.ts:13</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/5b5a998/src/link-storage.ts#L13">src/link-storage.ts:13</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -154,17 +155,17 @@
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
 					<a name="write" class="tsd-anchor"></a>
 					<h3>write</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
 						<li class="tsd-signature tsd-kind-icon">write<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/4b6220e/src/link-storage.ts#L9">src/link-storage.ts:9</a></li>
+									<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/5b5a998/src/link-storage.ts#L9">src/link-storage.ts:9</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -190,63 +191,96 @@
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 			<nav class="tsd-navigation primary">
 				<ul>
-					<li class="globals  ">
-						<a href="../index.html"><em>Globals</em></a>
+					<li class=" ">
+						<a href="../index.html">Exports</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-is-external">
-						<a href="../classes/link.html" class="tsd-kind-icon">Link</a>
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="../enums/chainname.html" class="tsd-kind-icon">Chain<wbr>Name</a>
 					</li>
 					<li class=" tsd-kind-class tsd-is-external">
+						<a href="../classes/chainid.html" class="tsd-kind-icon">Chain<wbr>Id</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="../classes/identityproof.html" class="tsd-kind-icon">Identity<wbr>Proof</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/link.html" class="tsd-kind-icon">Link</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/linkchain.html" class="tsd-kind-icon">Link<wbr>Chain</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="../classes/linksession.html" class="tsd-kind-icon">Link<wbr>Session</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="callbackpayload.html" class="tsd-kind-icon">Callback<wbr>Payload</a>
+					</li>
+					<li class=" tsd-kind-interface">
 						<a href="identifyresult.html" class="tsd-kind-icon">Identify<wbr>Result</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
+						<a href="linkcallback.html" class="tsd-kind-icon">Link<wbr>Callback</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="linkcallbackrejection.html" class="tsd-kind-icon">Link<wbr>Callback<wbr>Rejection</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="linkcallbackservice.html" class="tsd-kind-icon">Link<wbr>Callback<wbr>Service</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="linkchainconfig.html" class="tsd-kind-icon">Link<wbr>Chain<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-interface">
 						<a href="linkoptions.html" class="tsd-kind-icon">Link<wbr>Options</a>
 					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-is-external">
+					<li class="current tsd-kind-interface">
 						<a href="linkstorage.html" class="tsd-kind-icon">Link<wbr>Storage</a>
 						<ul>
-							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="linkstorage.html#read" class="tsd-kind-icon">read</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="linkstorage.html#remove" class="tsd-kind-icon">remove</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-external">
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="linkstorage.html#write" class="tsd-kind-icon">write</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="linktransport.html" class="tsd-kind-icon">Link<wbr>Transport</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="loginresult.html" class="tsd-kind-icon">Login<wbr>Result</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="transactargs.html" class="tsd-kind-icon">Transact<wbr>Args</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="transactoptions.html" class="tsd-kind-icon">Transact<wbr>Options</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-is-external">
+					<li class=" tsd-kind-interface">
 						<a href="transactresult.html" class="tsd-kind-icon">Transact<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="../index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a>
+						<a href="../index.html#chainidtype" class="tsd-kind-icon">Chain<wbr>IdType</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-is-external">
-						<a href="../index.html#permissionlevel" class="tsd-kind-icon">Permission<wbr>Level</a>
+						<a href="../index.html#identityprooftype" class="tsd-kind-icon">Identity<wbr>Proof<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../index.html#linkcallbackresponse" class="tsd-kind-icon">Link<wbr>Callback<wbr>Response</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../index.html#linkerrorcode" class="tsd-kind-icon">Link<wbr>Error<wbr>Code</a>
 					</li>
 				</ul>
 			</nav>
@@ -257,6 +291,18 @@
 	<div class="container">
 		<h2>Legend</h2>
 		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
 		</div>
 	</div>
 </footer>
@@ -265,6 +311,5 @@
 </div>
 <div class="overlay"></div>
 <script src="../assets/js/main.js"></script>
-<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.js"><' + '/script>');</script>
 </body>
 </html>
