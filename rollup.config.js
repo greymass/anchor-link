@@ -6,6 +6,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
 import {terser} from 'rollup-plugin-terser'
 import json from '@rollup/plugin-json'
+import replace from '@rollup/plugin-replace'
 
 import pkg from './package.json'
 
@@ -31,6 +32,10 @@ const exportFix = `
 })()
 `
 
+const replaceVersion = replace({
+    __ver: pkg.version,
+})
+
 export default [
     {
         input: 'src/index-bundle.ts',
@@ -41,7 +46,7 @@ export default [
             sourcemap: true,
             exports: 'default',
         },
-        plugins: [typescript({target: 'es5'})],
+        plugins: [replaceVersion, typescript({target: 'es5'})],
         external: Object.keys({...pkg.dependencies, ...pkg.peerDependencies}),
         onwarn,
     },
@@ -53,7 +58,7 @@ export default [
             format: 'esm',
             sourcemap: true,
         },
-        plugins: [typescript({target: 'esnext'})],
+        plugins: [replaceVersion, typescript({target: 'esnext'})],
         external: Object.keys({...pkg.dependencies, ...pkg.peerDependencies}),
         onwarn,
     },
@@ -75,6 +80,7 @@ export default [
             exports: 'named',
         },
         plugins: [
+            replaceVersion,
             resolve({browser: true}),
             commonjs(),
             json(),
@@ -107,7 +113,18 @@ export default [
 ]
 
 function onwarn(warning, rollupWarn) {
-    if (warning.code !== 'CIRCULAR_DEPENDENCY') {
-        rollupWarn(warning)
+    if (warning.code === 'CIRCULAR_DEPENDENCY') {
+        // unnecessary warning
+        return
     }
+    if (
+        warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
+        warning.source === 'tslib' &&
+        warning.names[0] === '__read'
+    ) {
+        // when using ts with importHelpers: true rollup complains about this
+        // seems safe to ignore since __read is not actually imported or used anywhere in the resulting bundles
+        return
+    }
+    rollupWarn(warning)
 }

@@ -176,6 +176,9 @@ export class LinkChain implements AbiProvider {
  * ```
  */
 export class Link {
+    /** Package version. */
+    static version = '__ver' // replaced by build script
+
     /** Chains this instance is configured with. */
     public readonly chains: LinkChain[]
     /** Transport used to deliver requests to the users wallet. */
