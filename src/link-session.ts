@@ -216,7 +216,7 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
     }
 
     transact(args: TransactArgs, options?: TransactOptions) {
-        return this.link.transact(args, options, this.chainId, this)
+        return this.link.transact(args, {...options, chain: this.chainId}, this)
     }
 }
 
@@ -295,6 +295,6 @@ export class LinkFallbackSession extends LinkSession implements LinkTransport {
     }
 
     transact(args: TransactArgs, options?: TransactOptions) {
-        return this.link.transact(args, options, this.chainId, this)
+        return this.link.transact(args, {...options, chain: this.chainId}, this)
     }
 }

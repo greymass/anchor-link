@@ -63,6 +63,10 @@ export interface TransactOptions {
      * Defaults to true.
      */
     broadcast?: boolean
+    /**
+     * Chain to use when configured with multiple chains.
+     */
+    chain?: LinkChainType
 }
 
 /**
@@ -411,17 +415,15 @@ export class Link {
      *
      * @param args The action, actions or transaction to use.
      * @param options Options for this transact call.
-     * @param chain Chain to use when configured with multiple chains.
      * @param transport Transport override, for internal use.
      */
     public async transact(
         args: TransactArgs,
         options?: TransactOptions,
-        chain?: LinkChainType,
         transport?: LinkTransport
     ): Promise<TransactResult> {
         const t = transport || this.transport
-        const c = chain ? this.getChain(chain) : undefined
+        const c = options && options.chain ? this.getChain(options.chain) : undefined
         const broadcast = options ? options.broadcast !== false : true
         // Initialize the loading state of the transport
         if (t && t.showLoading) {

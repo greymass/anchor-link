@@ -1545,9 +1545,9 @@ enquirer@^2.3.5:
     ansi-colors "^4.1.1"
 
 eosio-signing-request@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.0.0.tgz#5d1982143a0d3f85ed9c69a57b625858efafbe4d"
-  integrity sha512-EVSyKw7WeY69NPzc5iDVfNQmfITLakp8312ELRtvJPi5Gj7eh0SGwunBojwwa6nexKLw1L2FBxm9R3lY2bP21Q==
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.0.1.tgz#42cf32f51b79b5a0b495442a6a8f7e82b415a88e"
+  integrity sha512-dzMaQ9Zq16kJs1xI4NDe4zgg8+W+FKi6E3FYBJRBJW+3ypHDaCKCD7z6YN53E8SscP6fIY/M48lVsAA2Rtq6EA==
   dependencies:
     "@greymass/eosio" "^0.2.3"
     tslib "^2.0.3"
