@@ -1,7 +1,7 @@
 /**
  * Interface storage adapters should implement.
  *
- * Storage adapters are responsible for persisting [[LinkSession]]'s and can optionally be
+ * Storage adapters are responsible for persisting [[LinkSession]]s and can optionally be
  * passed to the [[Link]] constructor to auto-persist sessions.
  */
 export interface LinkStorage {
