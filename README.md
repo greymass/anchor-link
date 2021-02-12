@@ -3,16 +3,25 @@
 Persistent, fast and secure signature provider for EOSIO chains built on top of [EOSIO Signing Requests (EEP-7)](https://github.com/greymass/eosio-signing-request)
 
 Key features:
-  - Persistent sessions
-  - Cross device signing
-  - End to end encryption
+  - Persistent account sessions
+  - End-to-end encryption (E2EE)
+  - Account-based identity proofs
+  - Cross-device signing
+  - Network resource management
   - Open standard
 
 Resources:
   - [API Documentation](https://greymass.github.io/anchor-link)
-  - [Protocol specification](./protocol.md)
-  - [Usage examples](./examples)
-  - [Developer chat](https://t.me/anchor_link)
+  - [Protocol Specification](./protocol.md)
+  - [Developer Chat (Telegram)](https://t.me/anchor_link)
+
+Guides:
+  - [Integrating an app with Anchor using anchor-link](https://forums.greymass.com/t/integrating-an-app-with-anchor-using-anchor-link/165)
+
+Examples:
+  - [Simple Examples](./examples)
+  - [VueJS Demo Application](https://github.com/greymass/anchor-link-demo)
+  - [ReactJS Demo Application](https://github.com/greymass/anchor-link-demo-multipass)
 
 ## Installation
 
@@ -80,11 +89,11 @@ const link = new AnchorLink({
 })
 ```
 
-Now you have a link instance that can be used in the browser to login and/or transact. See [options](https://greymass.github.io/anchor-link/interfaces/linkoptions.html) for a full list of available options.
+Now you have a link instance that can be used in the browser to login and/or transact. See [options](https://greymass.github.io/anchor-link/interfaces/linkoptions.html) for a full list of available options. Also refer to the [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport/tree/master#basic-usage) README for a list of available options within the transport.
 
 ### Login and transact
 
-To create a persistent session where you can push multiple transaction to a users wallet you need to call the [login](https://greymass.github.io/anchor-link/classes/link.html#login) method on your link instance.
+To create a persistent session where you can push multiple transaction to a users wallet you need to call the [login](https://greymass.github.io/anchor-link/classes/link.html#login) method on your link instance and pass your application name.
 
 ```ts
 link.login('mydapp').then(({session}) => {
@@ -104,6 +113,37 @@ link.login('mydapp').then(({session}) => {
     })
 })
 ```
+
+
+### Restoring a session
+
+If a user has previously logged in to your application, you can restore that previous session by calling the [restoreSession](https://greymass.github.io/anchor-link/classes/link.html#restoresession) method on your link instance.
+
+```ts
+link.restoreSession('mydapp').then(({session}) => {
+    console.log(`Session for ${session.auth} restored`)
+    const action = {
+        account: 'eosio',
+        name: 'voteproducer',
+        authorization: [session.auth],
+        data: {
+            voter: session.auth.actor,
+            proxy: 'greymassvote',
+            producers: [],
+        },
+    }
+    session.transact({action}).then(({transaction}) => {
+        console.log(`Transaction broadcast! Id: ${transaction.id}`)
+    })
+})
+```
+
+### Additional Methods
+
+A full list of all methods can be found in the [Link class documentation](https://greymass.github.io/anchor-link/classes/link.html).
+
+- List all available sessions: [listSessions](https://greymass.github.io/anchor-link/classes/link.html#listsessions)
+- Removing a session: [removeSession](https://greymass.github.io/anchor-link/classes/link.html#removesession)
 
 ### One-shot transact
 
