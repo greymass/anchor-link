@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>TransactOptions | Anchor Link - v3.0.1</title>
-	<meta name="description" content="Documentation for Anchor Link - v3.0.1">
+	<title>TransactOptions | Anchor Link - v3.0.3</title>
+	<meta name="description" content="Documentation for Anchor Link - v3.0.3">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
 	<script async src="../assets/js/search.js" id="search-script"></script>
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">Anchor Link - v3.0.1</a>
+					<a href="../index.html" class="title">Anchor Link - v3.0.3</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -52,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../index.html">Anchor Link - v3.0.1</a>
+					<a href="../index.html">Anchor Link - v3.0.3</a>
 				</li>
 				<li>
 					<a href="transactoptions.html">TransactOptions</a>
@@ -88,6 +88,7 @@
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="transactoptions.html#broadcast" class="tsd-kind-icon">broadcast</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="transactoptions.html#chain" class="tsd-kind-icon">chain</a></li>
 							</ul>
 						</section>
 					</div>
@@ -101,13 +102,28 @@
 					<div class="tsd-signature tsd-kind-icon">broadcast<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/7a82ea5/src/link.ts#L65">src/link.ts:65</a></li>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/5d4ceca/src/link.ts#L65">src/link.ts:65</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Whether to broadcast the transaction or just return the signature.
 							Defaults to true.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="chain" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> chain</h3>
+					<div class="tsd-signature tsd-kind-icon">chain<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><a href="../classes/chainid.html" class="tsd-signature-type" data-tsd-kind="Class">ChainId</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Checksum256</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Bytes</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ArrayLike</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><a href="../classes/linkchain.html" class="tsd-signature-type" data-tsd-kind="Class">LinkChain</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/greymass/anchor-link/blob/5d4ceca/src/link.ts#L69">src/link.ts:69</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Chain to use when configured with multiple chains.</p>
 						</div>
 					</div>
 				</section>
@@ -182,6 +198,9 @@
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="transactoptions.html#broadcast" class="tsd-kind-icon">broadcast</a>
 							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="transactoptions.html#chain" class="tsd-kind-icon">chain</a>
+							</li>
 						</ul>
 					</li>
 				</ul>
@@ -220,6 +239,7 @@
 				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
 				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
 			</ul>
 		</div>
