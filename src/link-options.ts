@@ -69,7 +69,7 @@ export interface LinkOptions {
     /**
      * Whether to verify identity proofs submitted by the signer, if this is disabled the
      * [[Link.login | login]] and [[Link.identify | identify]] methods will not return an account object.
-     * @default `true`
+     * @default `false`
      */
     verifyProofs?: boolean
     /**
@@ -86,5 +86,7 @@ export namespace LinkOptions {
     /** @internal */
     export const defaults = {
         service: 'https://cb.anchor.link',
+        verifyProofs: false,
+        encodeChainIds: true,
     }
 }

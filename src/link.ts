@@ -91,7 +91,7 @@ export interface TransactResult {
  * The result of a [[Link.identify]] call.
  */
 export interface IdentifyResult extends TransactResult {
-    /** The identified account, not present if [[LinkOptions.verifyProofs]] is set to false. */
+    /** The identified account, not present unless [[LinkOptions.verifyProofs]] is set to true. */
     account?: API.v1.AccountObject
     /** The identity proof. */
     proof: IdentityProof
@@ -214,8 +214,14 @@ export class Link {
         if (options.storage !== null) {
             this.storage = options.storage || this.transport.storage
         }
-        this.verifyProofs = options.verifyProofs !== undefined ? options.verifyProofs : true
-        this.encodeChainIds = options.encodeChainIds !== undefined ? options.encodeChainIds : true
+        this.verifyProofs =
+            options.verifyProofs !== undefined
+                ? options.verifyProofs
+                : LinkOptions.defaults.verifyProofs
+        this.encodeChainIds =
+            options.encodeChainIds !== undefined
+                ? options.encodeChainIds
+                : LinkOptions.defaults.encodeChainIds
     }
 
     /**
