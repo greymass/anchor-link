@@ -91,29 +91,39 @@ const link = new AnchorLink({
 
 Now you have a link instance that can be used in the browser to login and/or transact. See [options](https://greymass.github.io/anchor-link/interfaces/linkoptions.html) for a full list of available options. Also refer to the [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport/tree/master#basic-usage) README for a list of available options within the transport.
 
-### Login and transact
+### Create a user session
 
 To create a persistent session where you can push multiple transaction to a users wallet you need to call the [login](https://greymass.github.io/anchor-link/classes/link.html#login) method on your link instance and pass your application name.
 
 ```ts
-link.login('mydapp').then(({session}) => {
-    console.log(`Logged in as ${session.auth}`)
-    const action = {
-        account: 'eosio',
-        name: 'voteproducer',
-        authorization: [session.auth],
-        data: {
-            voter: session.auth.actor,
-            proxy: 'greymassvote',
-            producers: [],
-        },
-    }
-    session.transact({action}).then(({transaction}) => {
-        console.log(`Transaction broadcast! Id: ${transaction.id}`)
-    })
-})
+// Perform the login, which returns the users identity
+const identity = await link.login('mydapp')
+
+// Save the session within your application for future use
+const {session} = identity
+console.log(`Logged in as ${session.auth}`)
 ```
 
+### Perform a transaction with a user session
+
+Using the session you have persisted within your applications state from the user login, you can now send transactions through the session to the users wallet using the [transact](https://greymass.github.io/anchor-link/classes/link.html#transact) method.
+
+```ts
+const action = {
+    account: 'eosio',
+    name: 'voteproducer',
+    authorization: [session.auth],
+    data: {
+        voter: session.auth.actor,
+        proxy: 'greymassvote',
+        producers: [],
+    },
+}
+
+session.transact({action}).then(({transaction}) => {
+    console.log(`Transaction broadcast! Id: ${transaction.id}`)
+})
+```
 
 ### Restoring a session
 
