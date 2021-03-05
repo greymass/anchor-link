@@ -149,6 +149,7 @@ const link = new Link({
     ],
     transport: manager,
     service: manager,
+    verifyProofs: true
 })
 
 suite('session', function () {
