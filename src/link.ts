@@ -209,7 +209,15 @@ export class Link {
         if (chains.length === 0) {
             throw new TypeError('options.chains is required')
         }
-        this.chains = chains.map(({chainId, nodeUrl}) => new LinkChain(chainId, nodeUrl))
+        this.chains = chains.map(({chainId, nodeUrl}) => {
+            if (!chainId) {
+                throw new Error('options.chains[].chainId is required')
+            }
+            if (!nodeUrl) {
+                throw new Error('options.chains[].nodeUrl is required')
+            }
+            return new LinkChain(chainId, nodeUrl)
+        })
         if (options.service === undefined || typeof options.service === 'string') {
             this.callbackService = new BuoyCallbackService(
                 options.service || LinkOptions.defaults.service
