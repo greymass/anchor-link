@@ -67,6 +67,13 @@ export interface TransactOptions {
      * Chain to use when configured with multiple chains.
      */
     chain?: LinkChainType
+    /**
+     * Whether the signer can make modifications to the request
+     * (e.g. applying a cosigner action to pay for resources).
+     *
+     * Defaults to false if [[broadcast]] is true or unspecified; otherwise true.
+     */
+    noModify?: boolean
 }
 
 /**
@@ -430,9 +437,11 @@ export class Link {
         options?: TransactOptions,
         transport?: LinkTransport
     ): Promise<TransactResult> {
+        const o = options || {}
         const t = transport || this.transport
-        const c = options && options.chain ? this.getChain(options.chain) : undefined
-        const broadcast = options ? options.broadcast !== false : true
+        const c = o.chain ? this.getChain(o.chain) : undefined
+        const broadcast = o.broadcast !== false
+        const noModify = o.noModify !== undefined ? o.noModify : !broadcast
         // Initialize the loading state of the transport
         if (t && t.showLoading) {
             t.showLoading()
@@ -461,6 +470,9 @@ export class Link {
             }
         }
         const {request, callback} = await this.createRequest(args, c, t)
+        if (noModify) {
+            request.setInfoKey('no_modify', true, 'bool')
+        }
         const result = await this.sendRequest(request, callback, c, t, broadcast)
         return result
     }
