@@ -33,6 +33,7 @@ const exportFix = `
 `
 
 const replaceVersion = replace({
+    preventAssignment: true,
     __ver: pkg.version,
 })
 
