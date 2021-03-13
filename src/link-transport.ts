@@ -37,4 +37,6 @@ export interface LinkTransport {
     prepare?(request: SigningRequest, session?: LinkSession): Promise<SigningRequest>
     /** Called immediately when the transaction starts */
     showLoading?(): void
+    /** User agent reported to the signer. */
+    userAgent?(): string
 }

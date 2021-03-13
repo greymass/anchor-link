@@ -552,6 +552,7 @@ export class Link {
         const createInfo = LinkCreate.from({
             session_name: identifier,
             request_key: requestKey,
+            user_agent: this.getUserAgent(),
         })
         const res = await this.identify({
             scope: identifier,
@@ -784,6 +785,15 @@ export class Link {
     /** Session storage key for identifier and suffix. */
     private sessionKey(identifier: NameType, ...suffix: string[]) {
         return [String(Name.from(identifier)), ...suffix].join('-')
+    }
+
+    /** Return user agent of this link. */
+    private getUserAgent() {
+        let rv = `AnchorLink/${Link.version}`
+        if (this.transport.userAgent) {
+            rv += ' ' + this.transport.userAgent()
+        }
+        return rv
     }
 }
 
