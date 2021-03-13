@@ -562,6 +562,7 @@ export class Link {
         })
         const metadata = {
             sameDevice: res.resolved.request.getRawInfo()['return_path'] !== undefined,
+            cosignerVersion: res.payload.cosigner_version,
         }
         const signerKey = res.proof.recover()
         let session: LinkSession
