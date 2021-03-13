@@ -44,7 +44,7 @@ publish: | distclean node_modules
 	@git diff-index --quiet HEAD || (echo "Uncommitted changes, please commit first" && exit 1)
 	@git fetch origin && git diff origin/master --quiet || (echo "Changes not pushed to origin, please push first" && exit 1)
 	@yarn config set version-tag-prefix "" && yarn config set version-git-message "Version %s"
-	@yarn publish
+	@yarn publish && git push && git push --tags
 
 .PHONY: clean
 clean:
