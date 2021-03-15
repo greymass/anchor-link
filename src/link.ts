@@ -439,7 +439,7 @@ export class Link {
     ): Promise<TransactResult> {
         const o = options || {}
         const t = transport || this.transport
-        const c = o.chain ? this.getChain(o.chain) : undefined
+        const c = o.chain !== undefined ? this.getChain(o.chain) : undefined
         const broadcast = o.broadcast !== false
         const noModify = o.noModify !== undefined ? o.noModify : !broadcast
         // Initialize the loading state of the transport
