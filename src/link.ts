@@ -561,9 +561,22 @@ export class Link {
                 scope: identifier,
             },
         })
-        const metadata = {
+        const metadata: Record<string, any> = {
+            // backwards compat, can be removed next major release
             sameDevice: res.resolved.request.getRawInfo()['return_path'] !== undefined,
-            cosignerVersion: res.payload.cosigner_version,
+        }
+        // append extra metadata from the signer
+        if (res.payload.link_meta) {
+            try {
+                const parsed = JSON.parse(res.payload.link_meta)
+                for (const key of Object.keys(parsed)) {
+                    // normalize key names to camelCase
+                    metadata[snakeToCamel(key)] = parsed[key]
+                }
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.warn('Unable to parse link metadata', error, res.payload.link_meta)
+            }
         }
         const signerKey = res.proof.recover()
         let session: LinkSession
@@ -811,4 +824,24 @@ function formatAuth(auth: PermissionLevelType): string {
         permission = String(a.permission)
     }
     return `${actor}@${permission}`
+}
+
+/**
+ * Return PascalCase version of snake_case string.
+ * @internal
+ */
+function snakeToPascal(name: string): string {
+    return name
+        .split('_')
+        .map((v) => (v[0] ? v[0].toUpperCase() : '_') + v.slice(1))
+        .join('')
+}
+
+/**
+ * Return camelCase version of snake_case string.
+ * @internal
+ */
+function snakeToCamel(name: string): string {
+    const pascal = snakeToPascal(name)
+    return pascal[0].toLowerCase() + pascal.slice(1)
 }
