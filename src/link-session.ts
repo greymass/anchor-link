@@ -174,12 +174,25 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
             cancel(new SessionError('Wallet did not respond in time', 'E_TIMEOUT'))
         }, this.timeout + 500)
         request.setInfoKey('link', info)
+        let payloadSent = false
+        const payload = Serializer.encode({object: this.encrypt(request)})
+        if (this.link.transport.sendSessionPayload) {
+            try {
+                payloadSent = this.link.transport.sendSessionPayload(payload, this)
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.warn('Unexpected error when transport tried to send session payload', error)
+            }
+        }
+        if (payloadSent) {
+            return
+        }
         fetch(this.channel.url, {
             method: 'POST',
             headers: {
                 'X-Buoy-Wait': (this.timeout / 1000).toFixed(0),
             },
-            body: Serializer.encode({object: this.encrypt(request)}).array,
+            body: payload.array,
         })
             .then((response) => {
                 if (response.status !== 200) {

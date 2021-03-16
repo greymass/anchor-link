@@ -1,8 +1,9 @@
-import {SigningRequest} from 'eosio-signing-request'
+import type {Bytes} from '@greymass/eosio'
+import type {SigningRequest} from 'eosio-signing-request'
 
-import {TransactResult} from './link'
-import {LinkSession} from './link-session'
-import {LinkStorage} from './link-storage'
+import type {TransactResult} from './link'
+import type {LinkSession} from './link-session'
+import type {LinkStorage} from './link-storage'
 
 /**
  * Protocol link transports need to implement.
@@ -39,4 +40,6 @@ export interface LinkTransport {
     showLoading?(): void
     /** User agent reported to the signer. */
     userAgent?(): string
+    /** Send session request payload, optional. Can return false to indicate it has to be sent over the socket. */
+    sendSessionPayload?(payload: Bytes, session: LinkSession): boolean
 }
