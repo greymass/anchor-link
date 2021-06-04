@@ -1,3 +1,5 @@
+import type {LinkSession} from './link-session'
+
 /**
  * Error codes. Accessible using the `code` property on errors thrown by [[Link]] and [[LinkSession]].
  * - `E_DELIVERY`: Unable to route message to wallet.
@@ -35,8 +37,10 @@ export class IdentityError extends Error {
  */
 export class SessionError extends Error {
     public code: 'E_DELIVERY' | 'E_TIMEOUT'
-    constructor(reason: string, code: 'E_DELIVERY' | 'E_TIMEOUT') {
+    public session: LinkSession
+    constructor(reason: string, code: 'E_DELIVERY' | 'E_TIMEOUT', session: LinkSession) {
         super(reason)
         this.code = code
+        this.session = session
     }
 }

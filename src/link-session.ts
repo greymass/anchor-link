@@ -15,8 +15,8 @@ import {ChainId, ChainIdType, SigningRequest} from 'eosio-signing-request'
 import {SessionError} from './errors'
 import {Link, TransactArgs, TransactOptions, TransactResult} from './link'
 import {LinkTransport} from './link-transport'
-import {LinkInfo, SealedMessage} from './link-types'
-import {fetch, sealMessage} from './utils'
+import {LinkCreate, LinkInfo, SealedMessage} from './link-types'
+import {fetch, sealMessage, sessionMetadata} from './utils'
 
 /**
  * Type describing a link session that can create a eosjs compatible
@@ -119,12 +119,14 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
     readonly auth: PermissionLevel
     readonly identifier: Name
     readonly type = 'channel'
-    readonly metadata
+    public metadata
     readonly publicKey: PublicKey
     serialize: () => SerializedLinkSession
-    private channel: ChannelInfo
     private timeout = 2 * 60 * 1000 // ms
     private encrypt: (request: SigningRequest) => SealedMessage
+    private channelKey: PublicKey
+    private channelUrl: string
+    private channelName: string
 
     constructor(link: Link, data: LinkChannelSessionData, metadata: any) {
         super()
@@ -132,21 +134,30 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         this.chainId = ChainId.from(data.chainId)
         this.auth = PermissionLevel.from(data.auth)
         this.publicKey = PublicKey.from(data.publicKey)
-        this.channel = data.channel
         this.identifier = Name.from(data.identifier)
         const privateKey = PrivateKey.from(data.requestKey)
-        const publicKey = PublicKey.from(data.channel.key)
+        this.channelKey = PublicKey.from(data.channel.key)
+        this.channelUrl = data.channel.url
+        this.channelName = data.channel.name
         this.encrypt = (request) => {
-            return sealMessage(request.encode(true, false), privateKey, publicKey)
+            return sealMessage(request.encode(true, false), privateKey, this.channelKey)
         }
         this.metadata = {
             ...(metadata || {}),
             timeout: this.timeout,
-            name: this.channel.name,
+            name: this.channelName,
+            request_key: privateKey.toPublic(),
         }
         this.serialize = () => ({
             type: 'channel',
-            data,
+            data: {
+                ...data,
+                channel: {
+                    url: this.channelUrl,
+                    key: this.channelKey,
+                    name: this.channelName,
+                },
+            },
             metadata: this.metadata,
         })
     }
@@ -165,14 +176,14 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
 
     onRequest(request: SigningRequest, cancel) {
         const info = LinkInfo.from({
-            expiration: new Date(Date.now() + this.timeout).toISOString().slice(0, -1),
+            expiration: new Date(Date.now() + this.timeout),
         })
         if (this.link.transport.onSessionRequest) {
             this.link.transport.onSessionRequest(this, request, cancel)
         }
-        setTimeout(() => {
-            cancel(new SessionError('Wallet did not respond in time', 'E_TIMEOUT'))
-        }, this.timeout + 500)
+        const timer = setTimeout(() => {
+            cancel(new SessionError('Wallet did not respond in time', 'E_TIMEOUT', this))
+        }, this.timeout)
         request.setInfoKey('link', info)
         let payloadSent = false
         const payload = Serializer.encode({object: this.encrypt(request)})
@@ -187,28 +198,37 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         if (payloadSent) {
             return
         }
-        fetch(this.channel.url, {
+        fetch(this.channelUrl, {
             method: 'POST',
-            headers: {
-                'X-Buoy-Wait': (this.timeout / 1000).toFixed(0),
-            },
             body: payload.array,
         })
             .then((response) => {
                 if (response.status !== 200) {
-                    cancel(new SessionError('Unable to push message', 'E_DELIVERY'))
+                    clearTimeout(timer)
+                    cancel(new SessionError('Unable to push message', 'E_DELIVERY', this))
                 } else {
                     // request delivered
                 }
             })
             .catch((error) => {
+                clearTimeout(timer)
                 cancel(
                     new SessionError(
                         `Unable to reach link service (${error.message || String(error)})`,
-                        'E_DELIVERY'
+                        'E_DELIVERY',
+                        this
                     )
                 )
             })
+    }
+
+    addLinkInfo(request: SigningRequest) {
+        const createInfo = LinkCreate.from({
+            session_name: this.identifier,
+            request_key: this.metadata.request_key,
+            user_agent: this.link.getUserAgent(),
+        })
+        request.setInfoKey('link', createInfo)
     }
 
     prepare(request) {
@@ -224,12 +244,41 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         }
     }
 
+    recoverError(error: Error, request: SigningRequest) {
+        if (this.link.transport.recoverError) {
+            return this.link.transport.recoverError(error, request)
+        }
+        return false
+    }
+
     public makeSignatureProvider(): any {
         return this.link.makeSignatureProvider([this.publicKey.toString()], this.chainId, this)
     }
 
-    transact(args: TransactArgs, options?: TransactOptions) {
-        return this.link.transact(args, {...options, chain: this.chainId}, this)
+    async transact(args: TransactArgs, options?: TransactOptions) {
+        const res: TransactResult = await this.link.transact(
+            args,
+            {...options, chain: this.chainId},
+            this
+        )
+        // update session if callback payload contains new channel info
+        if (res.payload.link_ch && res.payload.link_key && res.payload.link_name) {
+            try {
+                const metadata = {
+                    ...this.metadata,
+                    ...sessionMetadata(res.payload, res.resolved.request),
+                }
+                this.channelUrl = res.payload.link_ch
+                this.channelKey = PublicKey.from(res.payload.link_key)
+                this.channelName = res.payload.link_name
+                metadata.name = res.payload.link_name
+                this.metadata = metadata
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.warn('Unable to recover link session', error)
+            }
+        }
+        return res
     }
 }
 

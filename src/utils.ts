@@ -9,6 +9,7 @@ import {
     Serializer,
     UInt64,
 } from '@greymass/eosio'
+import {CallbackPayload, SigningRequest} from 'eosio-signing-request'
 
 import {SealedMessage} from './link-types'
 
@@ -40,4 +41,49 @@ export function sealMessage(
         ciphertext,
         checksum,
     })
+}
+
+/**
+ * Extract session metadata from a callback payload and request.
+ * @internal
+ */
+export function sessionMetadata(payload: CallbackPayload, request: SigningRequest) {
+    const metadata: Record<string, any> = {
+        // backwards compat, can be removed next major release
+        sameDevice: request.getRawInfo()['return_path'] !== undefined,
+    }
+    // append extra metadata from the signer
+    if (payload.link_meta) {
+        try {
+            const parsed = JSON.parse(payload.link_meta)
+            for (const key of Object.keys(parsed)) {
+                // normalize key names to camelCase
+                metadata[snakeToCamel(key)] = parsed[key]
+            }
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn('Unable to parse link metadata', error, payload.link_meta)
+        }
+    }
+    return metadata
+}
+
+/**
+ * Return PascalCase version of snake_case string.
+ * @internal
+ */
+function snakeToPascal(name: string): string {
+    return name
+        .split('_')
+        .map((v) => (v[0] ? v[0].toUpperCase() : '_') + v.slice(1))
+        .join('')
+}
+
+/**
+ * Return camelCase version of snake_case string.
+ * @internal
+ */
+function snakeToCamel(name: string): string {
+    const pascal = snakeToPascal(name)
+    return pascal[0].toLowerCase() + pascal.slice(1)
 }

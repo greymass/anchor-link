@@ -42,4 +42,9 @@ export interface LinkTransport {
     userAgent?(): string
     /** Send session request payload, optional. Can return false to indicate it has to be sent over the socket. */
     sendSessionPayload?(payload: Bytes, session: LinkSession): boolean
+    /**
+     * Can be implemented to recover from certain errors, if the function returns true the error will
+     * not bubble up to the caller of .transact or .login and the link will continue waiting for the callback.
+     */
+    recoverError?(error: Error, request: SigningRequest): boolean
 }

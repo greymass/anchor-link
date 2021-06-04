@@ -40,6 +40,7 @@ import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
 import {LinkCreate} from './link-types'
 import {BuoyCallbackService, LinkCallback, LinkCallbackService} from './link-callback'
+import {sessionMetadata} from './utils'
 
 /**
  * Payload accepted by the [[Link.transact]] method.
@@ -341,17 +342,24 @@ export class Link {
                 throw new Error('Invalid request flags')
             }
             // wait for callback or user cancel
+            let done = false
             const cancel = new Promise<never>((resolve, reject) => {
                 t.onRequest(request, (reason) => {
-                    callback.cancel()
-                    if (typeof reason === 'string') {
-                        reject(new CancelError(reason))
-                    } else {
-                        reject(reason)
+                    if (done) {
+                        // ignore any cancel calls once callbackResponse below has resolved
+                        return
                     }
+                    const error = typeof reason === 'string' ? new CancelError(reason) : reason
+                    if (t.recoverError && t.recoverError(error, request) === true) {
+                        // transport was able to recover from the error
+                        return
+                    }
+                    callback.cancel()
+                    reject(error)
                 })
             })
             const callbackResponse = await Promise.race([callback.wait(), cancel])
+            done = true
             if (typeof callbackResponse.rejected === 'string') {
                 throw new CancelError(callbackResponse.rejected)
             }
@@ -561,23 +569,7 @@ export class Link {
                 scope: identifier,
             },
         })
-        const metadata: Record<string, any> = {
-            // backwards compat, can be removed next major release
-            sameDevice: res.resolved.request.getRawInfo()['return_path'] !== undefined,
-        }
-        // append extra metadata from the signer
-        if (res.payload.link_meta) {
-            try {
-                const parsed = JSON.parse(res.payload.link_meta)
-                for (const key of Object.keys(parsed)) {
-                    // normalize key names to camelCase
-                    metadata[snakeToCamel(key)] = parsed[key]
-                }
-            } catch (error) {
-                // eslint-disable-next-line no-console
-                console.warn('Unable to parse link metadata', error, res.payload.link_meta)
-            }
-        }
+        const metadata = sessionMetadata(res.payload, res.resolved.request)
         const signerKey = res.proof.recover()
         let session: LinkSession
         if (res.payload.link_ch && res.payload.link_key && res.payload.link_name) {
@@ -609,9 +601,7 @@ export class Link {
                 metadata
             )
         }
-        if (this.storage) {
-            await this.storeSession(identifier, session)
-        }
+        await this.storeSession(session)
         return {
             ...res,
             session,
@@ -787,12 +777,21 @@ export class Link {
         await this.storage!.write(key, JSON.stringify(list))
     }
 
-    /** Makes sure session is in storage list of sessions and moves it to top (most recently used). */
-    private async storeSession(identifier: NameType, session: LinkSession) {
-        const key = this.sessionKey(identifier, formatAuth(session.auth), String(session.chainId))
-        const data = JSON.stringify(session.serialize())
-        await this.storage!.write(key, data)
-        await this.touchSession(identifier, session.auth, session.chainId)
+    /**
+     * Makes sure session is in storage list of sessions and moves it to top (most recently used).
+     * @internal
+     */
+    async storeSession(session: LinkSession) {
+        if (this.storage) {
+            const key = this.sessionKey(
+                session.identifier,
+                formatAuth(session.auth),
+                String(session.chainId)
+            )
+            const data = JSON.stringify(session.serialize())
+            await this.storage.write(key, data)
+            await this.touchSession(session.identifier, session.auth, session.chainId)
+        }
     }
 
     /** Session storage key for identifier and suffix. */
@@ -800,8 +799,11 @@ export class Link {
         return [String(Name.from(identifier)), ...suffix].join('-')
     }
 
-    /** Return user agent of this link. */
-    private getUserAgent() {
+    /**
+     * Return user agent of this link.
+     * @internal
+     */
+    getUserAgent() {
         let rv = `AnchorLink/${Link.version}`
         if (this.transport.userAgent) {
             rv += ' ' + this.transport.userAgent()
@@ -824,24 +826,4 @@ function formatAuth(auth: PermissionLevelType): string {
         permission = String(a.permission)
     }
     return `${actor}@${permission}`
-}
-
-/**
- * Return PascalCase version of snake_case string.
- * @internal
- */
-function snakeToPascal(name: string): string {
-    return name
-        .split('_')
-        .map((v) => (v[0] ? v[0].toUpperCase() : '_') + v.slice(1))
-        .join('')
-}
-
-/**
- * Return camelCase version of snake_case string.
- * @internal
- */
-function snakeToCamel(name: string): string {
-    const pascal = snakeToPascal(name)
-    return pascal[0].toLowerCase() + pascal.slice(1)
 }
