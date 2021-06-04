@@ -891,9 +891,9 @@
     strip-json-comments "^3.1.1"
 
 "@greymass/eosio@^0.4.0":
-  version "0.4.5"
-  resolved "https://registry.yarnpkg.com/@greymass/eosio/-/eosio-0.4.5.tgz#aef623f421ebdc1cc9663c9330e0b8ca67a51ca3"
-  integrity sha512-gRDYevIjX38u9yrd9uEjmMym07Ac0O2pPzUVVgjrhmchrBrqXvKHi0Y0TAMjESM8Dtfo+FcR42EqJpxvVSpRnw==
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/@greymass/eosio/-/eosio-0.4.6.tgz#1f6ba57eb7a1cd6643b6d61f268530d9291fc70e"
+  integrity sha512-JOsQy7jMTE6YRZlXIHkCiU+clva3xUHFwPMtsmDhYF3OlDfxO8HZqfePAafAvW2AEPtsWBHXKgMdjIog7RufQw==
   dependencies:
     bn.js "^4.11.9"
     brorand "^1.1.0"
@@ -1671,9 +1671,9 @@ enquirer@^2.3.5:
     ansi-colors "^4.1.1"
 
 eosio-signing-request@^2.2.0:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.2.1.tgz#9e7a18d88d87fe34538ef9d2ae962b12bcd413c7"
-  integrity sha512-+u+A6SCmx6NslYFlS1lfehqH1zECvjpyYN7SSyz5h0+thz3J1N0Xf8QnInI3THLLm96hCy27RvK5SSEDyl6mxQ==
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.2.2.tgz#281cfe0843dc80205c89003d5638baf70fdcc449"
+  integrity sha512-lxRBHYkk2rAnnZrFnTqweD1FLH3usL5oE24m3+1zNK2vJHRVlIyUk7tlUlmax78j8+FE54Po8LQCQ8TrCSSFGg==
   dependencies:
     "@greymass/eosio" "^0.4.0"
     tslib "^2.0.3"
