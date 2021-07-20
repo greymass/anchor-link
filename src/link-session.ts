@@ -200,11 +200,18 @@ export class LinkChannelSession extends LinkSession implements LinkTransport {
         }
         fetch(this.channelUrl, {
             method: 'POST',
+            headers: {
+                'X-Buoy-Soft-Wait': '10',
+            },
             body: payload.array,
         })
             .then((response) => {
-                if (response.status !== 200) {
+                if (Math.floor(response.status / 100) !== 2) {
                     clearTimeout(timer)
+                    if (response.status === 202) {
+                        // eslint-disable-next-line no-console
+                        console.warn('Missing delivery ack from session channel')
+                    }
                     cancel(new SessionError('Unable to push message', 'E_DELIVERY', this))
                 } else {
                     // request delivered
