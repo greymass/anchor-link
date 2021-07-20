@@ -2,7 +2,7 @@ import {v4 as uuid} from 'uuid'
 import {CallbackPayload} from 'eosio-signing-request'
 import WebSocket from 'isomorphic-ws'
 
-import {fetch} from './utils'
+import {fetch, logWarn} from './utils'
 
 /** Service that handles waiting for a ESR callback to be sent to an url. */
 export interface LinkCallbackService {
@@ -145,12 +145,11 @@ async function pollForCallback(
                 throw new Error(`HTTP ${res.status}: ${res.statusText}`)
             }
         } catch (error) {
-            // eslint-disable-next-line no-console
-            console.warn('Unexpected hyperbuoy error', error)
+            logWarn('Unexpected hyperbuoy error', error)
         }
         await sleep(1000)
     }
-    return (null as unknown) as CallbackPayload
+    return null as unknown as CallbackPayload
 }
 
 /**

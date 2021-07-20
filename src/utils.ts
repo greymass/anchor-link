@@ -61,8 +61,7 @@ export function sessionMetadata(payload: CallbackPayload, request: SigningReques
                 metadata[snakeToCamel(key)] = parsed[key]
             }
         } catch (error) {
-            // eslint-disable-next-line no-console
-            console.warn('Unable to parse link metadata', error, payload.link_meta)
+            logWarn('Unable to parse link metadata', error, payload.link_meta)
         }
     }
     return metadata
@@ -86,4 +85,13 @@ function snakeToPascal(name: string): string {
 function snakeToCamel(name: string): string {
     const pascal = snakeToPascal(name)
     return pascal[0].toLowerCase() + pascal.slice(1)
+}
+
+/**
+ * Print a warning message to console.
+ * @internal
+ **/
+export function logWarn(...args: any[]) {
+    // eslint-disable-next-line no-console
+    console.warn('[anchor-link]', ...args)
 }
