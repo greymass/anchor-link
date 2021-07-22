@@ -47,7 +47,7 @@ export default [
             sourcemap: true,
             exports: 'default',
         },
-        plugins: [replaceVersion, typescript({target: 'es5'})],
+        plugins: [replaceVersion, typescript({target: 'es6'})],
         external: Object.keys({...pkg.dependencies, ...pkg.peerDependencies}),
         onwarn,
     },
