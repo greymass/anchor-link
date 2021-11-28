@@ -7,6 +7,7 @@ import {
     API,
     APIClient,
     APIProvider,
+    APIResponse,
     PermissionLevel,
     PrivateKey,
     TimePointSec,
@@ -84,18 +85,27 @@ class TestManager implements LinkTransport, APIProvider, LinkCallbackService, Li
         },
     })
 
+    morph(json): APIResponse {
+        return {
+            json,
+            text: JSON.stringify(json),
+            status: 200,
+            headers: {},
+        }
+    }
+
     // api
-    async call(path: string, params?: any) {
+    async call(path: string, params?: any): Promise<APIResponse> {
         switch (path) {
             case '/v1/chain/get_account':
-                return this.account
+                return this.morph(this.account)
             case '/v1/chain/get_abi': {
                 const account = String(params.account_name)
                 const data = readFileSync(pathJoin(__dirname, 'abis', `${account}.json`))
-                return {account_name: account, abi: JSON.parse(data.toString('utf-8'))}
+                return this.morph({account_name: account, abi: JSON.parse(data.toString('utf-8'))})
             }
             case '/v1/chain/push_transaction': {
-                return {}
+                return this.morph({})
             }
             default:
                 throw new Error(`Unexpected request to ${path}`)
