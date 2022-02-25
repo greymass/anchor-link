@@ -10,7 +10,8 @@
         "noImplicitAny": false,
         "sourceMap": true,
         "strict": true,
-        "target": "es2020"
+        "target": "es2020",
+        "useUnknownInCatchVariables": false
     },
     "include": ["src/*"]
 }
