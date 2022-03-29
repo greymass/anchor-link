@@ -1,8 +1,10 @@
 import type {APIClient} from '@greymass/eosio'
 import type {ChainIdType} from 'eosio-signing-request'
+
+import type {LinkCallbackService} from './link-callback'
+import type {LinkChain} from './link'
 import type {LinkStorage} from './link-storage'
 import type {LinkTransport} from './link-transport'
-import type {LinkCallbackService} from './link-callback'
 
 /**
  * Type describing a EOSIO chain.
@@ -42,7 +44,7 @@ export interface LinkOptions {
      * ]
      * ```
      */
-    chains: LinkChainConfig[]
+    chains: (LinkChainConfig | LinkChain)[]
     /**
      * ChainID or esr chain name alias for which the link is valid.
      * @deprecated Use [[chains]] instead.

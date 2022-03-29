@@ -34,7 +34,7 @@ import {
 } from 'eosio-signing-request'
 
 import {CancelError, IdentityError} from './errors'
-import {LinkChainConfig, LinkOptions} from './link-options'
+import {LinkOptions} from './link-options'
 import {LinkChannelSession, LinkFallbackSession, LinkSession} from './link-session'
 import {LinkStorage} from './link-storage'
 import {LinkTransport} from './link-transport'
@@ -210,21 +210,29 @@ export class Link {
         if (!options.transport) {
             throw new TypeError('options.transport is required')
         }
-        let chains: LinkChainConfig[] = options.chains || []
+        let chains = options.chains || []
         if (options.chainId && options.client) {
+            if (options.chains.length > 0) {
+                throw new TypeError(
+                    'options.chainId and options.client are deprecated and cannot be used together with options.chains'
+                )
+            }
             chains = [{chainId: options.chainId, nodeUrl: options.client}]
         }
         if (chains.length === 0) {
             throw new TypeError('options.chains is required')
         }
-        this.chains = chains.map(({chainId, nodeUrl}) => {
-            if (!chainId) {
-                throw new Error('options.chains[].chainId is required')
+        this.chains = chains.map((chain) => {
+            if (chain instanceof LinkChain) {
+                return chain
             }
-            if (!nodeUrl) {
-                throw new Error('options.chains[].nodeUrl is required')
+            if (!chain.chainId) {
+                throw new TypeError('options.chains[].chainId is required')
             }
-            return new LinkChain(chainId, nodeUrl)
+            if (!chain.nodeUrl) {
+                throw new TypeError('options.chains[].nodeUrl is required')
+            }
+            return new LinkChain(chain.chainId, chain.nodeUrl)
         })
         if (options.service === undefined || typeof options.service === 'string') {
             this.callbackService = new BuoyCallbackService(
