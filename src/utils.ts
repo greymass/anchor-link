@@ -1,5 +1,5 @@
 import makeFetch from 'fetch-ponyfill'
-import {AES_CBC} from 'asmcrypto.js'
+import {AES_CBC} from '@greymass/miniaes'
 import {
     Bytes,
     Checksum256,

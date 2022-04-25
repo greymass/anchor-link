@@ -35,7 +35,7 @@
     },
     "dependencies": {
         "@greymass/eosio": "^0.5.0",
-        "asmcrypto.js": "^2.3.2",
+        "@greymass/miniaes": "^1.0.0",
         "eosio-signing-request": "^2.2.0",
         "fetch-ponyfill": "^7.1.0",
         "isomorphic-ws": "^4.0.1",
