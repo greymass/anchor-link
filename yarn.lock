@@ -922,10 +922,10 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@greymass/eosio@^0.5.0":
-  version "0.5.5"
-  resolved "https://registry.yarnpkg.com/@greymass/eosio/-/eosio-0.5.5.tgz#ce049bb85bcc0dbbc37181579dec3536900ca7c5"
-  integrity sha512-3SpIjECqdubf3ovrd+K6jvX9AG/wqW2zmFlb6gRlVCLxPSw09Vy/nNBLxLN1E4c2558T8LIYa3/kxteBluC3Zg==
+"@greymass/eosio@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@greymass/eosio/-/eosio-0.6.0.tgz#6da636c1651626881cee0a46747559d20412f3a0"
+  integrity sha512-acVKfiuNMkZ9aOFf/EJIk8X5PAoc53ZJeGP0ehpACX3Pz/rFOTmZFDnVaBKTuL3pFSMPA1K5h1la9nC42fDTcw==
   dependencies:
     bn.js "^4.11.9"
     brorand "^1.1.0"
@@ -1718,12 +1718,12 @@ emoji-regex@^8.0.0:
   resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-8.0.0.tgz#e818fd69ce5ccfcb404594f842963bf53164cc37"
   integrity sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==
 
-eosio-signing-request@^2.2.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.4.0.tgz#87e89d4e016a6317e249dc3cc571390a9c2940d3"
-  integrity sha512-jmFAzdXDfuDELN2Xvr857cm/TA0pb9lCoHQvRq9Gb/yp0GfIqWHhJuVyZyLkCHlU2E62rnID7es12qNFmn2l2g==
+eosio-signing-request@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/eosio-signing-request/-/eosio-signing-request-2.5.0.tgz#d371f10f9cf030bc4fc3abeeb6c8432bdbb7e268"
+  integrity sha512-wS/ju5680dp28XMyKSYdDFUt3HVlaAIfHn5MlfKuf1bTluJWYgRxbToDj3x/VdhJFuw+JF/XUoL8WGEixx7JWg==
   dependencies:
-    "@greymass/eosio" "^0.5.0"
+    "@greymass/eosio" "^0.6.0"
     tslib "^2.0.3"
 
 es6-error@^4.0.1:
