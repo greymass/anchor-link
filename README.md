@@ -134,7 +134,7 @@ session.transact({action}).then(({transaction}) => {
 If a user has previously logged in to your application, you can restore that previous session by calling the [restoreSession](https://greymass.github.io/anchor-link/classes/link.html#restoresession) method on your link instance.
 
 ```ts
-link.restoreSession('mydapp').then(({session}) => {
+link.restoreSession('mydapp').then((session) => {
     console.log(`Session for ${session.auth} restored`)
     const action = {
         account: 'eosio',
