@@ -3,25 +3,29 @@
 Persistent, fast and secure signature provider for EOSIO chains built on top of [EOSIO Signing Requests (EEP-7)](https://github.com/greymass/eosio-signing-request)
 
 Key features:
-  - Persistent account sessions
-  - End-to-end encryption (E2EE)
-  - Account-based identity proofs
-  - Cross-device signing
-  - Network resource management
-  - Open standard
+
+-   Persistent account sessions
+-   End-to-end encryption (E2EE)
+-   Account-based identity proofs
+-   Cross-device signing
+-   Network resource management
+-   Open standard
 
 Resources:
-  - [API Documentation](https://greymass.github.io/anchor-link)
-  - [Protocol Specification](./protocol.md)
-  - [Developer Chat (Telegram)](https://t.me/anchor_link)
+
+-   [API Documentation](https://greymass.github.io/anchor-link)
+-   [Protocol Specification](./protocol.md)
+-   [Developer Chat (Telegram)](https://t.me/anchor_link)
 
 Guides:
-  - [Integrating an app with Anchor using anchor-link](https://forums.greymass.com/t/integrating-an-app-with-anchor-using-anchor-link/165)
+
+-   [Integrating an app with Anchor using anchor-link](https://forums.greymass.com/t/integrating-an-app-with-anchor-using-anchor-link/165)
 
 Examples:
-  - [Simple Examples](./examples)
-  - [VueJS Demo Application](https://github.com/greymass/anchor-link-demo)
-  - [ReactJS Demo Application](https://github.com/greymass/anchor-link-demo-multipass)
+
+-   [Simple Examples](./examples)
+-   [VueJS Demo Application](https://github.com/greymass/anchor-link-demo)
+-   [ReactJS Demo Application](https://github.com/greymass/anchor-link-demo-multipass)
 
 ## Installation
 
@@ -84,7 +88,7 @@ const link = new AnchorLink({
         {
             chainId: 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906',
             nodeUrl: 'https://eos.greymass.com',
-        }
+        },
     ],
 })
 ```
@@ -152,8 +156,8 @@ link.restoreSession('mydapp').then(({session}) => {
 
 A full list of all methods can be found in the [Link class documentation](https://greymass.github.io/anchor-link/classes/link.html).
 
-- List all available sessions: [listSessions](https://greymass.github.io/anchor-link/classes/link.html#listsessions)
-- Removing a session: [removeSession](https://greymass.github.io/anchor-link/classes/link.html#removesession)
+-   List all available sessions: [listSessions](https://greymass.github.io/anchor-link/classes/link.html#listsessions)
+-   Removing a session: [removeSession](https://greymass.github.io/anchor-link/classes/link.html#removesession)
 
 ### One-shot transact
 
@@ -190,10 +194,10 @@ Transports in Anchor Link are responsible for getting signature requests to the 
 
 Available transports:
 
- Package | Description
----------| ---------------
- [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport) | Browser overlay that generates QR codes or triggers local URI handler if available
- [anchor-link-console-transport](https://github.com/greymass/anchor-link-console-transport) | Transport that prints ASCII QR codes and esr:// links to the JavaScript console
+| Package                                                                                    | Description                                                                        |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport) | Browser overlay that generates QR codes or triggers local URI handler if available |
+| [anchor-link-console-transport](https://github.com/greymass/anchor-link-console-transport) | Transport that prints ASCII QR codes and esr:// links to the JavaScript console    |
 
 See the [`LinkTransport` documentation](https://greymass.github.io/anchor-link/interfaces/linktransport.html) for details on how to implement custom transports.
 
