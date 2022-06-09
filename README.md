@@ -19,7 +19,7 @@ Resources:
 
 Guides:
 
--   [Integrating an app with Anchor using anchor-link](https://forums.greymass.com/t/integrating-an-app-with-anchor-using-anchor-link/165)
+-   [Integrating an app with Anchor using anchor-link](https://forums.eoscommunity.org/t/integrating-an-app-with-anchor-using-anchor-link/165)
 
 Examples:
 
@@ -93,11 +93,11 @@ const link = new AnchorLink({
 })
 ```
 
-Now you have a link instance that can be used in the browser to login and/or transact. See [options](https://greymass.github.io/anchor-link/interfaces/linkoptions.html) for a full list of available options. Also refer to the [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport/tree/master#basic-usage) README for a list of available options within the transport.
+Now you have a link instance that can be used in the browser to login and/or transact. See [options](https://greymass.github.io/anchor-link/interfaces/LinkOptions.html) for a full list of available options. Also refer to the [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport/tree/master#basic-usage) README for a list of available options within the transport.
 
 ### Create a user session
 
-To create a persistent session where you can push multiple transaction to a users wallet you need to call the [login](https://greymass.github.io/anchor-link/classes/link.html#login) method on your link instance and pass your application name.
+To create a persistent session where you can push multiple transaction to a users wallet you need to call the [login](https://greymass.github.io/anchor-link/classes/Link.html#login) method on your link instance and pass your application name.
 
 ```ts
 // Perform the login, which returns the users identity
@@ -110,7 +110,7 @@ console.log(`Logged in as ${session.auth}`)
 
 ### Perform a transaction with a user session
 
-Using the session you have persisted within your applications state from the user login, you can now send transactions through the session to the users wallet using the [transact](https://greymass.github.io/anchor-link/classes/link.html#transact) method.
+Using the session you have persisted within your applications state from the user login, you can now send transactions through the session to the users wallet using the [transact](https://greymass.github.io/anchor-link/classes/Link.html#transact) method.
 
 ```ts
 const action = {
@@ -131,7 +131,7 @@ session.transact({action}).then(({transaction}) => {
 
 ### Restoring a session
 
-If a user has previously logged in to your application, you can restore that previous session by calling the [restoreSession](https://greymass.github.io/anchor-link/classes/link.html#restoresession) method on your link instance.
+If a user has previously logged in to your application, you can restore that previous session by calling the [restoreSession](https://greymass.github.io/anchor-link/classes/Link.html#restoresession) method on your link instance.
 
 ```ts
 link.restoreSession('mydapp').then((session) => {
@@ -154,14 +154,14 @@ link.restoreSession('mydapp').then((session) => {
 
 ### Additional Methods
 
-A full list of all methods can be found in the [Link class documentation](https://greymass.github.io/anchor-link/classes/link.html).
+A full list of all methods can be found in the [Link class documentation](https://greymass.github.io/anchor-link/classes/Link.html).
 
--   List all available sessions: [listSessions](https://greymass.github.io/anchor-link/classes/link.html#listsessions)
--   Removing a session: [removeSession](https://greymass.github.io/anchor-link/classes/link.html#removesession)
+-   List all available sessions: [listSessions](https://greymass.github.io/anchor-link/classes/Link.html#listsessions)
+-   Removing a session: [removeSession](https://greymass.github.io/anchor-link/classes/Link.html#removesession)
 
 ### One-shot transact
 
-To sign action(s) or a transaction using the link without logging in you can call the [transact](https://greymass.github.io/anchor-link/classes/link.html#transact) method on your link instance.
+To sign action(s) or a transaction using the link without logging in you can call the [transact](https://greymass.github.io/anchor-link/classes/Link.html#transact) method on your link instance.
 
 ```ts
 const action = {
@@ -186,7 +186,7 @@ link.transact({action}).then(({signer, transaction}) => {
 })
 ```
 
-You can find more examples in the [examples directory](./examples) at the root of this repository and don't forget to look at the [API documentation](https://greymass.github.io/anchor-link/classes/link.html).
+You can find more examples in the [examples directory](./examples) at the root of this repository and don't forget to look at the [API documentation](https://greymass.github.io/anchor-link/classes/Link.html).
 
 ## Transports
 
@@ -199,7 +199,7 @@ Available transports:
 | [anchor-link-browser-transport](https://github.com/greymass/anchor-link-browser-transport) | Browser overlay that generates QR codes or triggers local URI handler if available |
 | [anchor-link-console-transport](https://github.com/greymass/anchor-link-console-transport) | Transport that prints ASCII QR codes and esr:// links to the JavaScript console    |
 
-See the [`LinkTransport` documentation](https://greymass.github.io/anchor-link/interfaces/linktransport.html) for details on how to implement custom transports.
+See the [`LinkTransport` documentation](https://greymass.github.io/anchor-link/interfaces/LinkTransport.html) for details on how to implement custom transports.
 
 ## Protocol
 
