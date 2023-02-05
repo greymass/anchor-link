@@ -1,5 +1,6 @@
 import {strict as assert} from 'assert'
 import 'mocha'
+import zlib from 'pako'
 
 import {Link, LinkTransport} from '../src'
 import {SigningRequest} from 'eosio-signing-request'
@@ -8,8 +9,12 @@ import {
     APIClient,
     APIProvider,
     APIResponse,
+    Name,
     PermissionLevel,
     PrivateKey,
+    PublicKey,
+    Serializer,
+    Struct,
     TimePointSec,
 } from '@greymass/eosio'
 import {LinkCallback, LinkCallbackResponse, LinkCallbackService} from '../src/link-callback'
@@ -159,7 +164,7 @@ const link = new Link({
     ],
     transport: manager,
     service: manager,
-    verifyProofs: true
+    verifyProofs: true,
 })
 
 suite('session', function () {
@@ -190,5 +195,36 @@ suite('session', function () {
         } catch (error) {
             assert.equal(error.message, 'User canceled request (no thanks)')
         }
+    })
+    test('debugging', async function () {
+        class LinkCreateTest extends Struct {
+            static abiName = 'link_create'
+            static abiFields = [
+                {
+                    name: 'session_name',
+                    type: Name,
+                },
+                {
+                    name: 'request_key',
+                    type: PublicKey,
+                },
+                {
+                    name: 'user_agent',
+                    type: 'string',
+                    optional: true,
+                    extension: true,
+                },
+            ]
+        }
+
+        const test = SigningRequest.from(
+            'esr:g2NgYGZgmMCTIrr4IQOTdUZJSUGxlb5-cpJeYl5yRn6RXk5mXra-pYW5aZpxqpluYmKysa6JUUqKbqJ5mpGuiaFpipG5hYmBgbEZMwtI6UlGuGnM7xXX5D3R2bzin4zJ3_7T0l7HrMsfrnh9s3FO60XvuZuk0-cyOoLt8AFZYaxnomeo4FSUX16cWhRSlJhXXJBfVAIUNtYzUPDNr8rMyUnUNwWyNXwTkzPzSvKLM6wVPPNKUnMUgAIK_sEKEQqGBvGGpvHmmgqOBQU5qeGpSd6ZJfqmxuZ6xmYKGt4eIb4-Ogo5mdmpCu6pydn5mgrOGUX5uan6hgaWegYgqBCcmJZYlAnVwlqcnF-QylmemJOTWqKXnsuZnJGYmRefmVLcz8jJwMjAw7iJk9GC64vf1zmREs6z5Gc53jDLZGKWXMFasoNl6c-YvXWMWkwLWO2ier5bhe3ivyX45KYek8WSRatK_px3u7pSoCTDgbH4iUWUOsez6ywdJr8Pss_XX72x2kYoWiTri8V0uQmFOb4M3AxMjHKrOFQKanrE9qqKhEzez6b15u6_rTnF-dnLLOsNp362mc_ABQA',
+            {
+                zlib,
+            }
+        )
+
+        const info = test.getInfoKey('link', LinkCreateTest)
+        console.log(Serializer.objectify(info))
     })
 })
