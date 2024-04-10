@@ -6,5 +6,5 @@ import {Link} from './index-module'
 export default Link
 
 // expose dependencies
-export * from 'eosio-signing-request'
-export * from '@greymass/eosio'
+export * from '@wharfkit/signing-request'
+export * from '@wharfkit/antelope'

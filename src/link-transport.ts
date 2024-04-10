@@ -1,5 +1,5 @@
-import type {Bytes} from '@greymass/eosio'
-import type {SigningRequest} from 'eosio-signing-request'
+import type {Bytes} from '@wharfkit/antelope'
+import type {SigningRequest} from '@wharfkit/signing-request'
 
 import type {TransactResult} from './link'
 import type {LinkSession} from './link-session'

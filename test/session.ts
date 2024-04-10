@@ -2,16 +2,17 @@ import {strict as assert} from 'assert'
 import 'mocha'
 
 import {Link, LinkTransport} from '../src'
-import {SigningRequest} from 'eosio-signing-request'
+import {SigningRequest} from '@wharfkit/signing-request'
 import {
     API,
     APIClient,
+    APIMethods,
     APIProvider,
     APIResponse,
     PermissionLevel,
     PrivateKey,
     TimePointSec,
-} from '@greymass/eosio'
+} from '@wharfkit/antelope'
 import {LinkCallback, LinkCallbackResponse, LinkCallbackService} from '../src/link-callback'
 import {readFileSync} from 'fs'
 import {join as pathJoin} from 'path'
@@ -95,12 +96,16 @@ class TestManager implements LinkTransport, APIProvider, LinkCallbackService, Li
     }
 
     // api
-    async call(path: string, params?: any): Promise<APIResponse> {
-        switch (path) {
+    async call(args: {
+        path: string
+        params?: any
+        method?: APIMethods | undefined
+    }): Promise<APIResponse> {
+        switch (args.path) {
             case '/v1/chain/get_account':
                 return this.morph(this.account)
             case '/v1/chain/get_abi': {
-                const account = String(params.account_name)
+                const account = String(args.params.account_name)
                 const data = readFileSync(pathJoin(__dirname, 'abis', `${account}.json`))
                 return this.morph({account_name: account, abi: JSON.parse(data.toString('utf-8'))})
             }
@@ -108,7 +113,7 @@ class TestManager implements LinkTransport, APIProvider, LinkCallbackService, Li
                 return this.morph({})
             }
             default:
-                throw new Error(`Unexpected request to ${path}`)
+                throw new Error(`Unexpected request to ${args.path}`)
         }
     }
 
@@ -159,7 +164,7 @@ const link = new Link({
     ],
     transport: manager,
     service: manager,
-    verifyProofs: true
+    verifyProofs: true,
 })
 
 suite('session', function () {

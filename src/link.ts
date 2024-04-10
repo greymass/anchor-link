@@ -17,7 +17,7 @@ import {
     Signature,
     SignedTransaction,
     Transaction,
-} from '@greymass/eosio'
+} from '@wharfkit/antelope'
 
 import {
     AbiProvider,
@@ -31,7 +31,7 @@ import {
     ResolvedTransaction,
     SigningRequest,
     SigningRequestCreateArguments,
-} from 'eosio-signing-request'
+} from '@wharfkit/signing-request'
 
 import {CancelError, IdentityError} from './errors'
 import {LinkOptions} from './link-options'
