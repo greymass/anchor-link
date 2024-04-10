@@ -8,8 +8,8 @@ import {
     PublicKey,
     Serializer,
     UInt64,
-} from '@greymass/eosio'
-import {CallbackPayload, SigningRequest} from 'eosio-signing-request'
+} from '@wharfkit/antelope'
+import {CallbackPayload, SigningRequest} from '@wharfkit/signing-request'
 
 import {SealedMessage} from './link-types'
 

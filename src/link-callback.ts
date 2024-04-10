@@ -1,5 +1,5 @@
 import {v4 as uuid} from 'uuid'
-import {CallbackPayload} from 'eosio-signing-request'
+import {CallbackPayload} from '@wharfkit/signing-request'
 import WebSocket from 'isomorphic-ws'
 
 import {fetch, logWarn} from './utils'

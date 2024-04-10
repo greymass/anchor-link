@@ -8,9 +8,9 @@ import {
     PublicKey,
     PublicKeyType,
     Serializer,
-} from '@greymass/eosio'
+} from '@wharfkit/antelope'
 
-import {ChainId, ChainIdType, SigningRequest} from 'eosio-signing-request'
+import {ChainId, ChainIdType, SigningRequest} from '@wharfkit/signing-request'
 
 import {SessionError} from './errors'
 import {Link, TransactArgs, TransactOptions, TransactResult} from './link'

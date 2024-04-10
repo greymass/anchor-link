@@ -1,5 +1,5 @@
-import type {APIClient} from '@greymass/eosio'
-import type {ChainIdType} from 'eosio-signing-request'
+import type {APIClient} from '@wharfkit/antelope'
+import type {ChainIdType} from '@wharfkit/signing-request'
 
 import type {LinkCallbackService} from './link-callback'
 import type {LinkChain} from './link'
@@ -15,7 +15,7 @@ export interface LinkChainConfig {
      */
     chainId: ChainIdType
     /**
-     * URL to EOSIO node to communicate with (or a @greymass/eosio APIClient instance).
+     * URL to EOSIO node to communicate with (or a @wharfkit/antelope APIClient instance).
      */
     nodeUrl: string | APIClient
 }
@@ -51,7 +51,7 @@ export interface LinkOptions {
      */
     chainId?: ChainIdType
     /**
-     * URL to EOSIO node to communicate with or a `@greymass/eosio` APIClient instance.
+     * URL to EOSIO node to communicate with or a `@wharfkit/antelope` APIClient instance.
      * @deprecated Use [[chains]] instead.
      */
     client?: string | APIClient
